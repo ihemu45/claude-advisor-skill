@@ -15,9 +15,9 @@ Shareable [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-
 Personal (all your projects):
 
 ```bash
-git clone https://github.com/ihemu45/CLAUDE-CLOUD-SESSIONS.git
+git clone https://github.com/ihemu45/claude-advisor-skill.git
 mkdir -p ~/.claude/skills
-cp -r CLAUDE-CLOUD-SESSIONS/skills/advisor ~/.claude/skills/
+cp -r claude-advisor-skill/skills/advisor ~/.claude/skills/
 ```
 
 Per project (shared with your team via git): copy `skills/advisor` into `.claude/skills/` in the repo.
