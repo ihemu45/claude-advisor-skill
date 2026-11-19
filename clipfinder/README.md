@@ -298,6 +298,10 @@ tags; keep `required_tags` in sync with the campaign's rules page.
 | Key | Default | Meaning |
 |---|---|---|
 | `channels[]` | 5 streamers | One entry per streamer: `url` per the platform table above; `game`, `campaign_url`, `hashtags`, `credit`, `required_tags` feed the caption; `enabled: false` parks one |
+| `channels[].clip_after_s` | 0 | Ignore moments before this second of the stream (a campaign that only accepts footage after a timestamp) |
+| `channels[].overlay` | none | `{"png": "overlays/x.png", "position": "top", "width": 900, "margin": 60}` stamps a campaign's overlay on every clip |
+| `channels[].list_limit` | 8 | How many recent streams to look at; raise it to reach an older stream |
+| `auto_publish.hours`, `auto_publish.notify` | 9 to 23, true | Uploads only happen in these local hours and pop a Mac notification, because Reach campaigns want the link submitted within 30 minutes of posting |
 | `channels[].title_must_match` | GTA pattern on Dom, Clix, Lacy, Tomo | Only streams whose title matches this pattern are clipped, so a campaign that covers one game does not get the streamer's other games |
 | `audio_fallback`, `audio_min_db_above` | true, 6 dB | Use loudness when there is no chat; how far above the stream's usual level counts as a moment |
 | `min_confidence` | `maybe` | Cut only `maybe` and `strong` spikes; set `strong` for fewer, better clips |
@@ -308,6 +312,12 @@ tags; keep `required_tags` in sync with the campaign's rules page.
 | `captions` | true | Burn captions when faster-whisper is installed |
 | `llm_hooks` | false | Let Claude write the hook line; needs an Anthropic API key, otherwise rules are used |
 | `youtube.privacy` | `private` | `private` until you trust it, then `public` |
+
+Reach-run campaigns (Clix, Lacy, IShowSpeed) add three rules the bot cannot enforce: the
+account's audience must be at least half US, UK, CA, AU or NZ; each link must be
+submitted within 30 minutes of posting; and one strike (botting, reposts, AI video)
+removes you from every Reach campaign. Pool campaigns also need a minimum total of
+views across your clips before you earn anything (Clix 400K, Lacy 750K).
 
 Rights still apply: only add channels whose campaign allows clipping them. The
 watcher cannot tell when another streamer appears on screen, so the approve step

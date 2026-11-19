@@ -75,7 +75,8 @@ def load_config(path: str) -> dict:
     cfg.setdefault("audio_fallback", True)
     cfg.setdefault("audio_min_db_above", 6.0)
     cfg.setdefault("llm_hooks", False)
-    cfg.setdefault("auto_publish", {"enabled": False, "min_confidence": "strong", "max_per_run": 3})
+    cfg.setdefault("auto_publish", {"enabled": False, "min_confidence": "strong", "max_per_run": 3,
+                                    "hours": [9, 23], "notify": True})
     cfg.setdefault("channels", [])
     return cfg
 
@@ -266,12 +267,42 @@ def download_section(url: str, start: float, duration: float, dest: str, fmt: st
     return ok
 
 
-def reframe(src: str, dest: str, vertical: str) -> bool:
+def overlay_filter(overlay: dict | None) -> tuple[list[str], str]:
+    """Campaign overlay (a PNG the campaign supplies). Returns (extra inputs, filter tail) for a 1080x1920 frame.
+    overlay = {"png": "path.png", "position": "top|bottom|top-left|top-right|bottom-left|bottom-right", "width": 1080, "margin": 40}"""
+    if not overlay or not overlay.get("png") or not os.path.exists(os.path.expanduser(overlay["png"])):
+        return [], ""
+    png = os.path.expanduser(overlay["png"])
+    w = int(overlay.get("width", 1080))
+    m = int(overlay.get("margin", 40))
+    pos = overlay.get("position", "top")
+    xy = {"top": f"(W-w)/2:{m}", "bottom": f"(W-w)/2:H-h-{m}", "top-left": f"{m}:{m}", "top-right": f"W-w-{m}:{m}",
+          "bottom-left": f"{m}:H-h-{m}", "bottom-right": f"W-w-{m}:H-h-{m}"}.get(pos, f"(W-w)/2:{m}")
+    return ["-i", png], f"[ov]scale={w}:-1[ovs];[v][ovs]overlay={xy}[vout]"
+
+
+def reframe(src: str, dest: str, vertical: str, overlay: dict | None = None) -> bool:
     vf, _ = fh.vertical_filter(vertical)
-    cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", src] + vf + [
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", dest]
+    ov_in, ov_tail = overlay_filter(overlay)
+    cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", src] + ov_in
+    if ov_tail:
+        # rebuild the vertical filter as a graph that ends in [v], then stamp the overlay on it
+        if vertical == "blur":
+            graph = ("[0:v]split[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];"
+                     "[b]scale=1080:-2:flags=lanczos[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2[v]")
+        elif vertical == "center":
+            graph = "[0:v]crop=ih*9/16:ih,scale=1080:1920:flags=lanczos[v]"
+        else:
+            graph = "[0:v]null[v]"
+        graph += ";[1:v]null[ov];" + ov_tail
+        cmd += ["-filter_complex", graph, "-map", "[vout]", "-map", "0:a?"]
+    else:
+        cmd += vf
+    cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", dest]
     r = run(cmd, timeout=1800)
+    if r.returncode != 0:
+        print(r.stderr.strip()[-400:], file=sys.stderr)
     return r.returncode == 0 and os.path.exists(dest)
 
 
@@ -344,6 +375,9 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
         log(store, f"  audio: {len(peaks)} loud moment(s) (no chat replay on {platform_of(url) if url else 'local'})")
         if media != local_video and os.path.exists(media):
             os.remove(media)
+    after = float(channel.get("clip_after_s", 0) or 0)
+    if after:
+        peaks = [p for p in peaks if p.start >= after]   # e.g. a campaign that only accepts footage after 2:56:29
     if not peaks:
         store.mark(vid, channel=channel["name"], title=title, result="no_spikes", messages=n_msgs, detector=detector)
         return 0
@@ -357,13 +391,14 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
         final = os.path.join(store.workdir, "clips", clip_id + ".mp4")
         thumb = os.path.join(store.workdir, "clips", clip_id + ".jpg")
 
+        overlay = channel.get("overlay")
         if local_video:
-            cmd = fh.build_clip_cmd(local_video, start, dur, final, cfg["vertical"], copy=False)
-            ok = run(cmd, timeout=1800).returncode == 0
+            cmd = fh.build_clip_cmd(local_video, start, dur, raw, "none", copy=False)
+            ok = run(cmd, timeout=1800).returncode == 0 and reframe(raw, final, cfg["vertical"], overlay)
         else:
-            ok = download_section(url, start, dur, raw, cfg["video_format"]) and reframe(raw, final, cfg["vertical"])
-            if os.path.exists(raw):
-                os.remove(raw)
+            ok = download_section(url, start, dur, raw, cfg["video_format"]) and reframe(raw, final, cfg["vertical"], overlay)
+        if os.path.exists(raw):
+            os.remove(raw)
         if not ok:
             log(store, f"  clip {i}: download/encode failed, skipping")
             continue
@@ -448,7 +483,7 @@ def cmd_run(args) -> int:
                 if not ch.get("enabled", True):
                     continue
                 try:
-                    streams = list_streams(ch["url"])
+                    streams = list_streams(ch["url"], limit=int(ch.get("list_limit", 8)))
                 except Exception as e:
                     log(store, f"[{ch['name']}] listing failed: {e}")
                     continue
@@ -472,6 +507,12 @@ def auto_publish(store: Store, cfg: dict) -> None:
     """Approve the best new clips on their own and hand them to publish_youtube.py.
     Needs youtube_token.json to exist already (run publish_youtube.py once by hand to create it)."""
     ap_cfg = cfg["auto_publish"]
+    hours = ap_cfg.get("hours") or [0, 24]
+    now_h = dt.datetime.now().hour
+    if not (int(hours[0]) <= now_h < int(hours[1])):
+        log(store, f"auto-publish: outside publish hours {hours[0]}:00-{hours[1]}:00, clips stay queued "
+                   f"(Reach campaigns want the link submitted within 30 min of posting)")
+        return
     floor = CONF_LEVELS.get(ap_cfg.get("min_confidence", "strong"), 2)
     limit = int(ap_cfg.get("max_per_run", 3))
     picked = 0
@@ -496,8 +537,25 @@ def auto_publish(store: Store, cfg: dict) -> None:
     log(store, f"auto-publish: uploading {picked} clip(s)")
     r = subprocess.run([sys.executable, os.path.join(HERE, "publish_youtube.py"), "--config", cfg["_path"]],
                        capture_output=True, text=True)
+    uploaded = []
     for line in (r.stdout + r.stderr).strip().splitlines():
         log(store, "  " + line)
+        if "uploaded https://" in line:
+            uploaded.append(line.split("uploaded ", 1)[1].split()[0])
+    if uploaded and ap_cfg.get("notify", True):
+        notify(f"{len(uploaded)} clip(s) uploaded to YouTube",
+               "Submit the links on the campaign pages within 30 minutes. They are in submit_queue.md.")
+
+
+def notify(title: str, text: str) -> None:
+    """macOS banner so you know a clip went out and the 30-minute submit clock started."""
+    if sys.platform != "darwin":
+        return
+    try:
+        script = f'display notification "{text}" with title "{title}" sound name "Glass"'
+        subprocess.run(["osascript", "-e", script], capture_output=True, timeout=10)
+    except Exception:
+        pass
 
 
 def cmd_status(args) -> int:
