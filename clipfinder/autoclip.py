@@ -61,6 +61,7 @@ def load_config(path: str) -> dict:
         cfg = json.load(fh_)
     cfg.setdefault("workdir", os.path.join(HERE, "autoclip_data"))
     cfg["workdir"] = os.path.expanduser(cfg["workdir"])
+    cfg["_path"] = os.path.abspath(path)
     cfg.setdefault("max_streams_per_run", 2)
     cfg.setdefault("top", 6)
     cfg.setdefault("min_confidence", "maybe")
@@ -74,6 +75,7 @@ def load_config(path: str) -> dict:
     cfg.setdefault("audio_fallback", True)
     cfg.setdefault("audio_min_db_above", 6.0)
     cfg.setdefault("llm_hooks", False)
+    cfg.setdefault("auto_publish", {"enabled": False, "min_confidence": "strong", "max_per_run": 3})
     cfg.setdefault("channels", [])
     return cfg
 
@@ -454,9 +456,43 @@ def cmd_run(args) -> int:
                         log(store, f"  failed: {e}\n{traceback.format_exc()}")
                         store.mark(s["id"], channel=ch["name"], title=s.get("title", ""), result=f"error: {e}")
     finally:
+        if total and cfg["auto_publish"].get("enabled"):
+            auto_publish(store, cfg)
         pending = sum(1 for c in store.queue if c["status"] == "pending")
         log(store, f"done: {total} new clip(s); {pending} waiting for review -> python3 review_server.py")
     return 0
+
+
+def auto_publish(store: Store, cfg: dict) -> None:
+    """Approve the best new clips on their own and hand them to publish_youtube.py.
+    Needs youtube_token.json to exist already (run publish_youtube.py once by hand to create it)."""
+    ap_cfg = cfg["auto_publish"]
+    floor = CONF_LEVELS.get(ap_cfg.get("min_confidence", "strong"), 2)
+    limit = int(ap_cfg.get("max_per_run", 3))
+    picked = 0
+    for c in sorted(store.queue, key=lambda c: -c["score"]):
+        if c["status"] != "pending" or CONF_LEVELS.get(c["confidence"], 0) < floor:
+            continue
+        if c.get("flags") and "spam?" in c["flags"]:
+            continue
+        c["status"] = "approved"
+        c["auto_approved"] = True
+        picked += 1
+        if picked >= limit:
+            break
+    _json_save(store.queue_path, store.queue)
+    if not picked:
+        log(store, "auto-publish: nothing met the bar this run")
+        return
+    if not os.path.exists(os.path.join(HERE, "youtube_token.json")):
+        log(store, f"auto-publish: {picked} clip(s) approved but youtube_token.json is missing; "
+                   f"run `python3 publish_youtube.py` once by hand to sign in, then they go out automatically")
+        return
+    log(store, f"auto-publish: uploading {picked} clip(s)")
+    r = subprocess.run([sys.executable, os.path.join(HERE, "publish_youtube.py"), "--config", cfg["_path"]],
+                       capture_output=True, text=True)
+    for line in (r.stdout + r.stderr).strip().splitlines():
+        log(store, "  " + line)
 
 
 def cmd_status(args) -> int:

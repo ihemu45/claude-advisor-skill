@@ -81,5 +81,10 @@
   "youtube": {
     "privacy": "private",
     "client_secret": "client_secret.json"
+  },
+  "auto_publish": {
+    "enabled": false,
+    "min_confidence": "strong",
+    "max_per_run": 3
   }
 }

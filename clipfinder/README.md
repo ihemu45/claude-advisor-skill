@@ -234,6 +234,26 @@ Approve the good ones, press **Publish approved clips to YouTube**, then open
 For TikTok, use the **Download clip** link on the card and the caption box; upload
 at tiktok.com/upload.
 
+### Fully automatic uploads
+
+Once `publish_youtube.py` has been run by hand one time (that creates
+`youtube_token.json`), flip the switch in config.json and the watcher approves
+and uploads on its own:
+
+```json
+"auto_publish": {"enabled": true, "min_confidence": "strong", "max_per_run": 3},
+"youtube": {"privacy": "public"}
+```
+
+Only `strong` clips without a spam flag go out automatically, at most three per
+run; `maybe` clips still wait on the review page. Start with `"privacy": "private"`
+for a few days, check the uploads in YouTube Studio, then switch to public.
+
+TikTok has no quick automatic path: its posting API needs a registered developer
+app and a review that takes days to weeks, and browser bots get accounts banned.
+Until that is set up, TikTok stays a download-and-upload from the review page,
+or goes through OpenShorts, which already holds those API approvals.
+
 ### Hands-off schedule
 
 ```bash
