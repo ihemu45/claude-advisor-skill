@@ -398,19 +398,24 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
     return made
 
 
-def fresh_enough(stream: dict, cfg: dict) -> bool:
+def fresh_enough(stream: dict, cfg: dict, channel: dict | None = None) -> bool:
+    channel = channel or {}
     if stream.get("duration") is None:
         return False  # live or upcoming
     if stream["duration"] < float(cfg["min_stream_minutes"]) * 60:
         return False
+    max_age = int(channel.get("max_stream_age_days", cfg["max_stream_age_days"]))
     upd = stream.get("upload_date")
     if upd and upd not in ("NA", "None"):
         try:
             d = dt.datetime.strptime(upd, "%Y%m%d")
-            if (dt.datetime.now() - d).days > int(cfg["max_stream_age_days"]):
+            if (dt.datetime.now() - d).days > max_age:
                 return False
         except ValueError:
             pass
+    pat = channel.get("title_must_match")
+    if pat and not re.search(pat, stream.get("title", ""), re.IGNORECASE):
+        return False
     return True
 
 
@@ -447,7 +452,7 @@ def cmd_run(args) -> int:
                 except Exception as e:
                     log(store, f"[{ch['name']}] listing failed: {e}")
                     continue
-                todo = [s for s in streams if not store.processed(s["id"]) and fresh_enough(s, cfg)]
+                todo = [s for s in streams if not store.processed(s["id"]) and fresh_enough(s, cfg, ch)]
                 log(store, f"[{ch['name']}] {len(streams)} recent, {len(todo)} new finished stream(s)")
                 for s in todo[: int(cfg["max_streams_per_run"])]:
                     try:

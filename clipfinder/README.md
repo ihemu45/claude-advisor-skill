@@ -298,6 +298,7 @@ tags; keep `required_tags` in sync with the campaign's rules page.
 | Key | Default | Meaning |
 |---|---|---|
 | `channels[]` | 5 streamers | One entry per streamer: `url` per the platform table above; `game`, `campaign_url`, `hashtags`, `credit`, `required_tags` feed the caption; `enabled: false` parks one |
+| `channels[].title_must_match` | GTA pattern on Dom, Clix, Lacy, Tomo | Only streams whose title matches this pattern are clipped, so a campaign that covers one game does not get the streamer's other games |
 | `audio_fallback`, `audio_min_db_above` | true, 6 dB | Use loudness when there is no chat; how far above the stream's usual level counts as a moment |
 | `min_confidence` | `maybe` | Cut only `maybe` and `strong` spikes; set `strong` for fewer, better clips |
 | `top` | 6 | Max clips per stream |

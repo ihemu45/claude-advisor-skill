@@ -11,7 +11,8 @@
       "hashtags": "#GTA6 #GTAVI #Tomo #gaming",
       "credit": "clips from @Tomovids live stream",
       "required_tags": "",
-      "enabled": true
+      "enabled": true,
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6"
     },
     {
       "name": "SypherPK",
@@ -37,7 +38,8 @@
       "credit": "clips from Dom's GTA 6 stream on Kick",
       "required_tags": "#dasgasdom3 #ad",
       "enabled": true,
-      "note": "Only his Nov 19 GTA 6 stream counts. Needs a GTA 6-specific TikTok/YouTube account. Kick has no chat export, so the audio detector is used. Join whop.com/gta6clipping for the submission link."
+      "note": "Only his Nov 19 GTA 6 stream counts. Needs a GTA 6-specific TikTok/YouTube account. Kick has no chat export, so the audio detector is used. Join whop.com/gta6clipping for the submission link.",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City"
     },
     {
       "name": "Clix",
@@ -50,7 +52,8 @@
       "credit": "clips from @Clix live stream",
       "required_tags": "",
       "enabled": true,
-      "note": "Check the brief at reachclipping.com/ClixGTA for his platform. If he streams on Kick, change url to https://kick.com/clix/videos"
+      "note": "Check the brief at reachclipping.com/ClixGTA for his platform. If he streams on Kick, change url to https://kick.com/clix/videos",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City"
     },
     {
       "name": "Lacy",
@@ -63,7 +66,8 @@
       "credit": "clips from Lacy's live stream",
       "required_tags": "",
       "enabled": false,
-      "note": "Very crowded pool, so off by default. Set enabled to true to include it."
+      "note": "Very crowded pool, so off by default. Set enabled to true to include it.",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City"
     }
   ],
   "max_streams_per_run": 2,
@@ -87,4 +91,4 @@
     "min_confidence": "strong",
     "max_per_run": 3
   }
-}
+}\n
