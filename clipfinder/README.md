@@ -174,3 +174,99 @@ as learning what moments and hooks perform, not as income.
 
 The more predictable path is selling editing to small streamers on Fiverr or
 Upwork and using this tool to deliver in a tenth of the time.
+
+---
+
+## Autopilot: the bots
+
+Three scripts turn the manual steps above into a schedule plus one tap per clip.
+
+```
+autoclip.py          the watcher: new streams -> chat -> spikes -> only those 45 s downloaded -> clips + captions -> queue
+review_server.py     the page you look at: video, what chat said, caption, Approve / Reject
+publish_youtube.py   uploads approved clips to your YouTube channel as Shorts, writes the links to paste into campaigns
+install_schedule.sh  runs the watcher every 2 hours on your Mac (launchd), even with Terminal closed
+```
+
+What stays yours: tapping Approve (10 seconds a clip), and pasting the posted link
+into the campaign page (30 seconds a clip). Everything else runs on its own.
+
+### Set up once
+
+1. Copy the config and edit the channel list, hashtags, and campaign links:
+
+```bash
+cp config.example.json config.json
+```
+
+2. Optional, for burned-in captions:
+
+```bash
+pip install faster-whisper
+```
+
+3. Optional, for YouTube uploads (skip if you will post by hand or through OpenShorts):
+   - console.cloud.google.com, create a project, enable **YouTube Data API v3**
+   - OAuth consent screen: External, add your own Google account under Test users
+   - Credentials, Create credentials, **OAuth client ID**, type **Desktop app**, download the JSON
+   - save it as `client_secret.json` in this folder, then:
+
+```bash
+pip install google-api-python-client google-auth-oauthlib
+```
+
+   The first publish opens a browser window once to approve posting to your channel.
+   Uploads are **private** by default so nothing goes live unseen; set `"privacy": "public"`
+   in config.json once you trust it. The free YouTube quota allows about six uploads a day.
+
+### Daily use
+
+```bash
+python3 autoclip.py run
+```
+
+```bash
+python3 review_server.py
+```
+
+Approve the good ones, press **Publish approved clips to YouTube**, then open
+`submit_queue.md` in the data folder and paste each link into its campaign page.
+For TikTok, use the **Download clip** link on the card and the caption box; upload
+at tiktok.com/upload.
+
+### Hands-off schedule
+
+```bash
+./install_schedule.sh
+```
+
+The watcher then runs every two hours while the Mac is awake. You only open the
+review page when you like. Remove it with `./uninstall_schedule.sh`.
+
+### Testing without the internet
+
+```bash
+python3 make_test_data.py testdata
+```
+
+```bash
+python3 autoclip.py --config config.json run --local-chat testdata/chat_twitchdownloader.json --local-video testdata/test_stream.mp4 --stream-id test1 --title "test"
+```
+
+### Config keys that matter
+
+| Key | Default | Meaning |
+|---|---|---|
+| `channels[]` | Tomo | One entry per streamer: `url` is the channel's `/streams` tab; `campaign_url`, `hashtags`, `credit`, `required_tags` feed the caption |
+| `min_confidence` | `maybe` | Cut only `maybe` and `strong` spikes; set `strong` for fewer, better clips |
+| `top` | 6 | Max clips per stream |
+| `max_streams_per_run` | 2 | Newest streams handled per run |
+| `max_stream_age_days`, `min_stream_minutes` | 7, 20 | Ignore old or tiny streams |
+| `vertical` | `blur` | `blur` keeps the full frame; `center` crops |
+| `captions` | true | Burn captions when faster-whisper is installed |
+| `llm_hooks` | false | Let Claude write the hook line; needs an Anthropic API key, otherwise rules are used |
+| `youtube.privacy` | `private` | `private` until you trust it, then `public` |
+
+Rights still apply: only add channels whose campaign allows clipping them. The
+watcher cannot tell when another streamer appears on screen, so the approve step
+is where that gets caught.

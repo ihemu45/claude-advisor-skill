@@ -1,0 +1,29 @@
+{
+  "workdir": "~/clipfinder_data",
+  "channels": [
+    {
+      "name": "Tomo",
+      "handle": "Tomovids",
+      "url": "https://www.youtube.com/@Tomovids/streams",
+      "campaign": "TOMO GTA VI Clipping",
+      "campaign_url": "https://contentrewards.com/c/campaigns/df6de26f-86ec-4782-b818-1fc8053b99a4",
+      "hashtags": "#GTA6 #GTAVI #Tomo #gaming",
+      "credit": "clips from @Tomovids live stream",
+      "required_tags": ""
+    }
+  ],
+  "max_streams_per_run": 2,
+  "top": 6,
+  "min_confidence": "maybe",
+  "lead": 20,
+  "duration": 45,
+  "vertical": "blur",
+  "captions": true,
+  "min_stream_minutes": 20,
+  "max_stream_age_days": 7,
+  "llm_hooks": false,
+  "youtube": {
+    "privacy": "private",
+    "client_secret": "client_secret.json"
+  }
+}
