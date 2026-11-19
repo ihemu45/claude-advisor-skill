@@ -57,7 +57,7 @@ async function publish(){
 
 CARD = """<div class="card __DONE__">
  <video controls preload="metadata" src="/media/__FILE__"></video>
- <div class="meta"><b>__CHANNEL__</b> · spike at __SPIKE__ · <span class="conf-__CONF__">__CONF__</span> · __PEOPLE__ people __FLAGS__ <span class="tag">__STATUS__</span></div>
+ <div class="meta"><b>__CHANNEL__</b> · __PLATFORM__ · spike at __SPIKE__ · <span class="conf-__CONF__">__CONF__</span> · found by __DETECTOR__ __PEOPLE__ __FLAGS__ <span class="tag">__STATUS__</span></div>
  <div class="chat">__CHAT__</div>
  <textarea id="cap-__ID__">__CAPTION__</textarea>
  __ACTIONS__
@@ -85,7 +85,9 @@ def render(store: autoclip.Store) -> str:
         cards.append(CARD.replace("__DONE__", "done" if c["status"] in ("published", "rejected") else "")
                      .replace("__FILE__", urllib.parse.quote(fid)).replace("__CHANNEL__", html.escape(c["channel"]))
                      .replace("__SPIKE__", c["spike_at"]).replace("__CONF__", c["confidence"])
-                     .replace("__PEOPLE__", str(c.get("people", ""))).replace("__FLAGS__", html.escape(c.get("flags", "")))
+                     .replace("__PEOPLE__", f"({c['people']} people)" if c.get("people") else "")
+                     .replace("__FLAGS__", html.escape(c.get("flags", "").replace("audio", "")))
+                     .replace("__PLATFORM__", html.escape(c.get("platform", ""))).replace("__DETECTOR__", html.escape(c.get("detector", "chat")))
                      .replace("__STATUS__", c["status"]).replace("__CHAT__", html.escape("\n".join(c.get("chat", [])[:5])))
                      .replace("__ID__", c["id"]).replace("__CAPTION__", html.escape(c["caption"]))
                      .replace("__ACTIONS__", actions).replace("__LINKS__", " · ".join(links)))

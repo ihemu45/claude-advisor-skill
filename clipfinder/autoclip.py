@@ -23,11 +23,13 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import math
 import os
-import shlex
+import re
+import shutil
+import statistics
 import subprocess
 import sys
-import time
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +39,17 @@ import find_highlights as fh  # noqa: E402
 import hooks  # noqa: E402
 
 CONF_LEVELS = {"weak": 0, "maybe": 1, "strong": 2}
+
+
+def platform_of(url: str) -> str:
+    u = (url or "").lower()
+    if "twitch.tv" in u:
+        return "twitch"
+    if "kick.com" in u:
+        return "kick"
+    if "youtube.com" in u or "youtu.be" in u:
+        return "youtube"
+    return "other"
 
 
 # --------------------------------------------------------------------------- #
@@ -57,7 +70,9 @@ def load_config(path: str) -> dict:
     cfg.setdefault("captions", True)
     cfg.setdefault("min_stream_minutes", 20)
     cfg.setdefault("max_stream_age_days", 7)
-    cfg.setdefault("video_format", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/bv*[height<=1080]+ba/b")
+    cfg.setdefault("video_format", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/bv*[height<=1080]+ba/b[height<=1080]/b")
+    cfg.setdefault("audio_fallback", True)
+    cfg.setdefault("audio_min_db_above", 6.0)
     cfg.setdefault("llm_hooks", False)
     cfg.setdefault("channels", [])
     return cfg
@@ -117,35 +132,122 @@ def run(cmd: list[str], timeout: int = 3600) -> subprocess.CompletedProcess:
 
 
 def list_streams(channel_url: str, limit: int = 8) -> list[dict]:
-    """Recent entries of a channel's /streams tab. Live or upcoming ones have no duration."""
-    cmd = ["yt-dlp", "--flat-playlist", "--playlist-end", str(limit),
-           "--print", "%(id)s\t%(duration)s\t%(live_status)s\t%(upload_date)s\t%(title)s", channel_url]
+    """Recent past broadcasts of a channel: YouTube /streams, Twitch /videos?filter=archives, Kick /videos.
+    Live or upcoming entries have no duration and are skipped later."""
+    cmd = ["yt-dlp", "--flat-playlist", "--playlist-end", str(limit), "--no-warnings",
+           "--print", "%(id)s\t%(duration)s\t%(live_status)s\t%(upload_date)s\t%(url)s\t%(title)s", channel_url]
     r = run(cmd, timeout=180)
     out = []
+    plat = platform_of(channel_url)
     for line in r.stdout.splitlines():
         parts = line.split("\t")
-        if len(parts) < 5:
+        if len(parts) < 6:
             continue
-        vid, dur, live, upd, title = parts[0], parts[1], parts[2], parts[3], "\t".join(parts[4:])
+        vid, dur, live, upd, url, title = parts[0], parts[1], parts[2], parts[3], parts[4], "\t".join(parts[5:])
         try:
             dur_s = float(dur) if dur not in ("NA", "None", "") else None
         except ValueError:
             dur_s = None
-        out.append({"id": vid, "duration": dur_s, "live_status": live, "upload_date": upd, "title": title,
-                    "url": f"https://www.youtube.com/watch?v={vid}"})
+        if url in ("NA", "None", ""):
+            url = {"youtube": f"https://www.youtube.com/watch?v={vid}",
+                   "twitch": f"https://www.twitch.tv/videos/{vid}"}.get(plat, vid)
+        out.append({"id": f"{plat}:{vid}" if plat != "youtube" else vid, "duration": dur_s, "live_status": live,
+                    "upload_date": upd, "title": title, "url": url, "platform": plat})
     if r.returncode != 0 and not out:
         raise RuntimeError(f"yt-dlp could not list {channel_url}: {r.stderr.strip()[-400:]}")
     return out
 
 
 def download_chat(url: str, dest_base: str) -> str | None:
-    """Download the live chat replay only. Returns the path, or None if the stream has no replay."""
-    cmd = ["yt-dlp", "--write-subs", "--sub-langs", "live_chat", "--skip-download",
-           "--no-warnings", "-o", dest_base, url]
-    r = run(cmd, timeout=1800)
-    path = dest_base + ".live_chat.json"
-    if os.path.exists(path) and os.path.getsize(path) > 0:
-        return path
+    """Download the chat replay only. YouTube: yt-dlp live_chat. Twitch: TwitchDownloaderCLI if installed.
+    Kick has no chat export, so it returns None and the audio detector takes over."""
+    plat = platform_of(url)
+    if plat == "youtube":
+        cmd = ["yt-dlp", "--write-subs", "--sub-langs", "live_chat", "--skip-download",
+               "--no-warnings", "-o", dest_base, url]
+        run(cmd, timeout=1800)
+        path = dest_base + ".live_chat.json"
+        return path if os.path.exists(path) and os.path.getsize(path) > 0 else None
+    if plat == "twitch":
+        cli = shutil.which("TwitchDownloaderCLI") or shutil.which("twitchdownloadercli")
+        m = re.search(r"/videos/(\d+)", url)
+        if cli and m:
+            path = dest_base + ".twitchchat.json"
+            run([cli, "chatdownload", "--id", m.group(1), "-o", path, "--collision", "Overwrite"], timeout=1800)
+            return path if os.path.exists(path) and os.path.getsize(path) > 0 else None
+    return None
+
+
+class AudioPeak:
+    """Looks enough like a find_highlights Bin for process_stream to use it."""
+    def __init__(self, start: float, score: float, db: float, base_db: float):
+        self.start = start
+        self.score = score
+        self.people = 0
+        self.flags = ["audio"]
+        self.samples = [f"audio spike: {db:.1f} dB, {db - base_db:+.1f} dB above the stream's usual level"]
+
+
+def audio_levels(media: str, bin_size: float, sample_rate: int = 48000) -> list[tuple[float, float]]:
+    """(window_start_seconds, RMS dB) for every window of the media's audio, via ffmpeg astats."""
+    n = int(sample_rate * bin_size)
+    af = (f"aresample={sample_rate},aformat=channel_layouts=mono,asetnsamples=n={n}:p=0,"
+          f"astats=metadata=1:reset=1,ametadata=mode=print:key=lavfi.astats.Overall.RMS_level:file=-")
+    r = run(["ffmpeg", "-hide_banner", "-nostats", "-loglevel", "error", "-i", media, "-vn", "-af", af, "-f", "null", "-"],
+            timeout=3600)
+    out, t = [], None
+    for line in r.stdout.splitlines():
+        if line.startswith("frame:"):
+            m = re.search(r"pts_time:([0-9.]+)", line)
+            t = float(m.group(1)) if m else None
+        elif "RMS_level=" in line and t is not None:
+            v = line.split("=", 1)[1].strip()
+            try:
+                db = float(v)
+            except ValueError:
+                db = -90.0  # "-inf" = silence
+            out.append((t, max(db, -90.0)))
+    return out
+
+
+def audio_peaks(media: str, bin_size: float, top: int, min_gap: float, min_db_above: float,
+                skip_start: float = 60.0, skip_end: float = 60.0, window: int = 30) -> list[AudioPeak]:
+    """Loudest moments relative to the stream's own level: the streamer shouting, laughing, chaos."""
+    levels = audio_levels(media, bin_size)
+    if len(levels) < 10:
+        return []
+    vals = [db for _, db in levels]
+    end_t = fh.probe_duration(media) or (levels[-1][0] + bin_size)  # ffmpeg emits a tiny trailing window
+    scored = []
+    for i, (t, db) in enumerate(levels):
+        if t < skip_start or t + bin_size > end_t - skip_end:
+            continue
+        lo, hi = max(0, i - window), min(len(vals), i + window + 1)
+        neigh = vals[lo:hi]
+        base = statistics.median(neigh)
+        mad = statistics.median(abs(x - base) for x in neigh)
+        spread = max(1.4826 * mad, 1.5)
+        z = (db - base) / spread
+        if db - base >= min_db_above and z >= 2.5:
+            scored.append(AudioPeak(t, round(z, 2), db, base))
+    scored.sort(key=lambda p: p.score, reverse=True)
+    picked: list[AudioPeak] = []
+    for p in scored:
+        if all(abs(p.start - q.start) >= min_gap for q in picked):
+            picked.append(p)
+        if len(picked) >= top:
+            break
+    return picked
+
+
+def download_audio(url: str, dest_base: str) -> str | None:
+    """Smallest stream that carries audio: audio-only when the site offers it, else the worst video."""
+    cmd = ["yt-dlp", "--no-warnings", "-f", "ba/wv*+ba/w", "-o", dest_base + ".%(ext)s", url]
+    run(cmd, timeout=3600)
+    for ext in ("m4a", "webm", "mp4", "opus", "aac", "mp3", "ts", "mkv"):
+        p = dest_base + "." + ext
+        if os.path.exists(p) and os.path.getsize(p) > 0:
+            return p
     return None
 
 
@@ -216,16 +318,32 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
     sdir = os.path.join(store.workdir, "streams")
     log(store, f"[{channel['name']}] {vid} | {title}")
 
-    chat = local_chat or download_chat(url, os.path.join(sdir, vid))
-    if not chat:
-        log(store, "  no chat replay available, skipping")
-        store.mark(vid, channel=channel["name"], title=title, result="no_chat")
-        return 0
-
-    peaks, bin_size, n_msgs = analyse(chat, cfg)
-    log(store, f"  {n_msgs} chat messages, window {bin_size:.0f}s, {len(peaks)} usable spike(s)")
+    safe_id = vid.replace(":", "_")
+    chat = local_chat or (download_chat(url, os.path.join(sdir, safe_id)) if url else None)
+    detector, n_msgs, bin_size, peaks = "chat", 0, 10.0, []
+    if chat:
+        peaks, bin_size, n_msgs = analyse(chat, cfg)
+        log(store, f"  chat: {n_msgs} messages, window {bin_size:.0f}s, {len(peaks)} usable spike(s)")
+    if not chat or (not peaks and n_msgs < 200):
+        if not cfg["audio_fallback"]:
+            log(store, "  no usable chat and audio fallback is off, skipping")
+            store.mark(vid, channel=channel["name"], title=title, result="no_chat")
+            return 0
+        media = local_video or download_audio(url, os.path.join(sdir, safe_id + "_audio"))
+        if not media:
+            log(store, "  no chat and the audio could not be downloaded, skipping")
+            store.mark(vid, channel=channel["name"], title=title, result="no_media")
+            return 0
+        detector, bin_size = "audio", 10.0
+        peaks = audio_peaks(media, bin_size, top=int(cfg["top"]), min_gap=90.0,
+                            min_db_above=float(cfg["audio_min_db_above"]))
+        floor = CONF_LEVELS.get(cfg["min_confidence"], 1)
+        peaks = [p for p in peaks if CONF_LEVELS[fh.confidence(p.score)] >= floor]
+        log(store, f"  audio: {len(peaks)} loud moment(s) (no chat replay on {platform_of(url) if url else 'local'})")
+        if media != local_video and os.path.exists(media):
+            os.remove(media)
     if not peaks:
-        store.mark(vid, channel=channel["name"], title=title, result="no_spikes", messages=n_msgs)
+        store.mark(vid, channel=channel["name"], title=title, result="no_spikes", messages=n_msgs, detector=detector)
         return 0
 
     made = 0
@@ -257,13 +375,14 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
             streamer=channel["name"], handle=channel.get("handle", ""), stream_title=title,
             chat_samples=p.samples, hashtags=channel.get("hashtags", ""),
             credit=channel.get("credit", ""), required_tags=channel.get("required_tags", ""),
-            use_llm=bool(cfg.get("llm_hooks")))
+            game=channel.get("game", "GTA 6"), use_llm=bool(cfg.get("llm_hooks")))
         with open(os.path.splitext(final)[0] + ".caption.txt", "w", encoding="utf-8") as fh_:
             fh_.write(caption)
         store.add_clip({
             "id": clip_id, "stream_id": vid, "stream_title": title, "stream_url": url,
             "channel": channel["name"], "campaign": channel.get("campaign", ""),
             "campaign_url": channel.get("campaign_url", ""),
+            "detector": detector, "platform": platform_of(url) if url else "local",
             "spike_at": fh.hms(p.start), "clip_start_s": round(start, 1), "clip_len_s": dur,
             "score": round(p.score, 2), "confidence": fh.confidence(p.score),
             "people": p.people, "flags": " ".join(p.flags), "chat": p.samples,
@@ -302,7 +421,7 @@ def cmd_run(args) -> int:
     store = Store(cfg["workdir"])
     total = 0
     try:
-        if args.local_chat:
+        if args.local_chat or args.local_video:
             ch = cfg["channels"][0] if cfg["channels"] else {"name": "Local", "handle": ""}
             stream = {"id": args.stream_id or "local", "title": args.title or "local test", "url": ""}
             if store.processed(stream["id"]) and not args.force:
@@ -319,6 +438,8 @@ def cmd_run(args) -> int:
                 total += process_stream(store, cfg, ch, stream)
         else:
             for ch in cfg["channels"]:
+                if not ch.get("enabled", True):
+                    continue
                 try:
                     streams = list_streams(ch["url"])
                 except Exception as e:
@@ -358,7 +479,7 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run", help="process new streams")
     r.add_argument("--video", help="one stream URL instead of scanning channels")
-    r.add_argument("--local-chat", help="test mode: a local chat export")
+    r.add_argument("--local-chat", help="test mode: a local chat export (omit to test the audio detector)")
     r.add_argument("--local-video", help="test mode: a local video file")
     r.add_argument("--stream-id", default=None)
     r.add_argument("--title", default=None)

@@ -13,28 +13,29 @@ import os
 import re
 
 RULES = [
-    (r"landing|landed|\blandy\b",          "Chat rated this GTA 6 landing 10/10 ✈️"),
-    (r"drive into|drove|crash|wreck|totaled", "His first drive in GTA 6 lasted 10 seconds 💀"),
-    (r"realistic|graphics|looks so|beautiful|gorgeous", "First time seeing GTA 6 graphics and chat lost it 😭"),
-    (r"no way|what just happened|wha+t",  "WHAT just happened in GTA 6 💀"),
-    (r"police|cops|wanted|5 stars",       "Five stars in GTA 6 went exactly how you'd expect 🚔"),
-    (r"plane|jet|heli|fly|flying",        "GTA 6 flying physics had chat screaming ✈️"),
-    (r"lucia|jason",                      "Chat was NOT ready for this GTA 6 moment 😳"),
-    (r"lmao|lol|haha|kekw|lul|😂|face_with_tears",  "GTA 6 had him crying laughing 😂"),
-    (r"insane|crazy|holy|bruh|💀|skull",  "GTA 6 is actually insane 💀"),
+    (r"audio spike",                      "{streamer} did NOT see this coming 😭"),
+    (r"landing|landed|\blandy\b",          "Chat rated this {game} landing 10/10 ✈️"),
+    (r"drive into|drove|crash|wreck|totaled", "His first drive in {game} lasted 10 seconds 💀"),
+    (r"realistic|graphics|looks so|beautiful|gorgeous", "First time seeing {game} graphics and chat lost it 😭"),
+    (r"no way|what just happened|wha+t",  "WHAT just happened in {game} 💀"),
+    (r"police|cops|wanted|5 stars",       "Five stars in {game} went exactly how you'd expect 🚔"),
+    (r"plane|jet|heli|fly|flying",        "{game} flying physics had chat screaming ✈️"),
+    (r"lucia|jason",                      "Chat was NOT ready for this {game} moment 😳"),
+    (r"lmao|lol|haha|kekw|lul|😂|face_with_tears",  "{game} had him crying laughing 😂"),
+    (r"insane|crazy|holy|bruh|💀|skull",  "{game} is actually insane 💀"),
 ]
-DEFAULT_HOOK = "{streamer}'s GTA 6 stream had chat in shambles 😭"
+DEFAULT_HOOK = "{streamer}'s {game} stream had chat in shambles 😭"
 
 
-def rule_hook(streamer: str, chat_samples: list[str]) -> str:
+def rule_hook(streamer: str, chat_samples: list[str], game: str = "GTA 6") -> str:
     blob = " ".join(chat_samples).lower()
     for pattern, hook in RULES:
         if re.search(pattern, blob, re.IGNORECASE):
-            return hook
-    return DEFAULT_HOOK.format(streamer=streamer)
+            return hook.format(streamer=streamer, game=game)
+    return DEFAULT_HOOK.format(streamer=streamer, game=game)
 
 
-def llm_hook(streamer: str, stream_title: str, chat_samples: list[str]) -> str | None:
+def llm_hook(streamer: str, stream_title: str, chat_samples: list[str], game: str = "GTA 6") -> str | None:
     """Ask Claude for one hook line. Returns None on any problem so the caller can fall back."""
     try:
         import anthropic
@@ -53,7 +54,7 @@ def llm_hook(streamer: str, stream_title: str, chat_samples: list[str]) -> str |
                     "no emoji except at most one at the end. Lead with the payoff, never with the game's name. "
                     "Never state anything as fact that the chat lines do not support."),
             messages=[{"role": "user", "content":
-                       f"Streamer: {streamer}\nStream title: {stream_title}\n"
+                       f"Streamer: {streamer}\nGame: {game}\nStream title: {stream_title}\n"
                        f"What chat said during the moment:\n- " + "\n- ".join(chat_samples[:8]) +
                        "\n\nWrite the hook."}],
         )
@@ -70,13 +71,13 @@ def llm_hook(streamer: str, stream_title: str, chat_samples: list[str]) -> str |
 
 def make_caption(streamer: str, handle: str, stream_title: str, chat_samples: list[str],
                  hashtags: str = "", credit: str = "", required_tags: str = "",
-                 use_llm: bool = False) -> tuple[str, str]:
+                 game: str = "GTA 6", use_llm: bool = False) -> tuple[str, str]:
     """Return (hook, full caption)."""
     hook = None
     if use_llm:
-        hook = llm_hook(streamer, stream_title, chat_samples)
+        hook = llm_hook(streamer, stream_title, chat_samples, game)
     if not hook:
-        hook = rule_hook(streamer, chat_samples)
+        hook = rule_hook(streamer, chat_samples, game)
     credit = credit or (f"clips from @{handle} live stream" if handle else f"clips from {streamer}'s live stream")
     tags = " ".join(t for t in [required_tags.strip(), hashtags.strip()] if t)
     caption = "\n".join(x for x in [hook, credit, tags] if x)

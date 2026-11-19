@@ -253,11 +253,32 @@ python3 make_test_data.py testdata
 python3 autoclip.py --config config.json run --local-chat testdata/chat_twitchdownloader.json --local-video testdata/test_stream.mp4 --stream-id test1 --title "test"
 ```
 
+### Platforms and how moments are found
+
+| Platform | Channel URL to put in config | Highlight detector |
+|---|---|---|
+| YouTube | `https://www.youtube.com/@handle/streams` | Chat replay (yt-dlp), falls back to audio |
+| Twitch | `https://www.twitch.tv/name/videos?filter=archives&sort=time` | Chat if TwitchDownloaderCLI is on PATH, else audio |
+| Kick | `https://kick.com/name/videos` | Audio (Kick has no chat export) |
+
+The audio detector finds the moments where the stream gets loud relative to its
+own usual level: the streamer screaming, laughing, chaos. It downloads only the
+audio track (or the smallest video when a site has no audio-only stream), so it
+is still fast. Audio clips are marked "found by audio" on the review page and
+deserve a slightly harder look than chat clips.
+
+The example config ships with every streamer that had a live campaign on
+Content Rewards at launch: Tomo (YouTube), SypherPK (Twitch), Dom of the RUCKUS
+campaign (Kick), Clix (Twitch, verify in the brief), and Lacy (Kick, off by
+default because the pool is crowded). Each entry carries the campaign's required
+tags; keep `required_tags` in sync with the campaign's rules page.
+
 ### Config keys that matter
 
 | Key | Default | Meaning |
 |---|---|---|
-| `channels[]` | Tomo | One entry per streamer: `url` is the channel's `/streams` tab; `campaign_url`, `hashtags`, `credit`, `required_tags` feed the caption |
+| `channels[]` | 5 streamers | One entry per streamer: `url` per the platform table above; `game`, `campaign_url`, `hashtags`, `credit`, `required_tags` feed the caption; `enabled: false` parks one |
+| `audio_fallback`, `audio_min_db_above` | true, 6 dB | Use loudness when there is no chat; how far above the stream's usual level counts as a moment |
 | `min_confidence` | `maybe` | Cut only `maybe` and `strong` spikes; set `strong` for fewer, better clips |
 | `top` | 6 | Max clips per stream |
 | `max_streams_per_run` | 2 | Newest streams handled per run |
