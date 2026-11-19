@@ -73,6 +73,7 @@ def main() -> int:
     ap.add_argument("--config", default=os.path.join(HERE, "config.json"))
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--public", action="store_true", help="publish as public regardless of config")
+    ap.add_argument("--login", action="store_true", help="only do the one-time Google sign-in, upload nothing")
     a = ap.parse_args()
 
     cfg = autoclip.load_config(a.config)
@@ -82,17 +83,25 @@ def main() -> int:
     token_path = os.path.join(HERE, "youtube_token.json")
     store = autoclip.Store(cfg["workdir"])
 
+    # sign in first, so the one-time browser approval happens even when nothing is queued yet
+    service = None
+    if not a.dry_run:
+        had_token = os.path.exists(token_path)
+        service = get_service(client_secret, token_path)
+        print("YouTube sign-in OK" + ("" if had_token else f" (saved to {os.path.basename(token_path)}; it will not ask again)"))
+        if a.login:
+            return 0
+
     approved = [c for c in store.queue if c["status"] == "approved"]
     if not approved:
-        print("Nothing approved. Approve clips on the review page first.")
+        print("Nothing approved yet. Approve clips on the review page (python3 review_server.py), "
+              "or turn on auto_publish in config.json.")
         return 0
     print(f"{len(approved)} approved clip(s), privacy={privacy}")
     if a.dry_run:
         for c in approved:
             print(f"  would upload {os.path.basename(c['file'])}: {c['hook']}")
         return 0
-
-    service = get_service(client_secret, token_path)
     submit_path = os.path.join(store.workdir, "submit_queue.md")
     done = 0
     for c in approved:
