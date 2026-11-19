@@ -63,13 +63,22 @@ def burst(center, width, n, pool, extra=None):
 burst(63, 4, 70, hype)              # reaction a few seconds after a 60 s event
 burst(152, 3, 45, boring + hype)    # medium burst, mixed
 burst(203, 4, 90, hype, (12, clip)) # biggest, with clip requests
+# noise the finder must ignore: a stream-start greeting burst and one spammer at ~105 s
+for _ in range(30):
+    msgs.append((random.uniform(0, 8), random.choice(["hi", "first", "hello", "yo"])))
+SPAM = [(random.uniform(102, 108), "TOMO CAN YOU ADD SUBWAY SURFERS PLEASE??? WE ARE BORED!!!") for _ in range(25)]
 msgs.sort()
+# authors: 50 regular chatters; spam messages all come from one account
+authored = [(t, txt, f"user{i % 50}") for i, (t, txt) in enumerate(msgs)]
+authored += [(t, txt, "spammer1") for t, txt in SPAM]
+authored.sort()
+msgs = [(t, txt) for t, txt, _ in authored]
 
 # TwitchDownloader-style JSON
 td = {"streamer": {"name": "test_streamer", "id": 1},
       "video": {"start": 0, "end": DURATION, "length": DURATION},
       "comments": [{"_id": str(i), "content_offset_seconds": round(tt, 3),
-                    "commenter": {"display_name": f"user{i % 50}"},
+                    "commenter": {"display_name": authored[i][2], "_id": authored[i][2]},
                     "message": {"body": txt, "fragments": [{"text": txt}]}}
                    for i, (tt, txt) in enumerate(msgs)]}
 with open(os.path.join(OUT, "chat_twitchdownloader.json"), "w", encoding="utf-8") as fh:
@@ -83,7 +92,7 @@ with open(os.path.join(OUT, "test_stream.live_chat.json"), "w", encoding="utf-8"
             runs = [{"text": txt.replace("😂", "")}, {"emoji": {"emojiId": "😂", "shortcuts": [":face_with_tears_of_joy:"]}}]
         obj = {"replayChatItemAction": {
                    "actions": [{"addChatItemAction": {"item": {"liveChatTextMessageRenderer": {
-                       "message": {"runs": runs}, "authorName": {"simpleText": f"user{i % 50}"},
+                       "message": {"runs": runs}, "authorName": {"simpleText": authored[i][2]},
                        "id": str(i), "timestampUsec": str(int(tt * 1e6))}}}}],
                    "videoOffsetTimeMsec": str(int(tt * 1000))},
                "videoOffsetTimeMsec": str(int(tt * 1000)), "isLive": False}
@@ -97,4 +106,4 @@ with open(os.path.join(OUT, "chat.csv"), "w", newline="", encoding="utf-8") as f
         w.writerow([f"{tt:.3f}", txt])
 
 print(f"{len(msgs)} chat messages written in 3 formats under {OUT}/")
-print("planted spikes at ~60s, ~150s, ~200s")
+print("planted spikes at ~60s, ~150s, ~200s; noise: greeting burst at 0-8s, one spammer at ~105s")

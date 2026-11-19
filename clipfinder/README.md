@@ -127,13 +127,14 @@ then submit the post links where the campaign asks.
 
 | Flag | Default | When to change |
 |---|---|---|
-| `--bin` | 10 s | Smaller for very fast chats, larger for slow ones |
+| `--bin` | auto | Window size. Picked from chat speed (10 s busy, up to 60 s quiet); set it to override |
 | `--lead` | 20 s | How far before the spike the clip starts |
 | `--duration` | 45 s | 30 to 60 s is the short-form sweet spot |
 | `--top` | 10 | Candidates to cut |
 | `--min-gap` | 90 s | Prevents three clips of one moment. Lower for short test videos |
 | `--min-score` | 2.5 | Raise if you get too many weak spikes |
-| `--min-messages` | 5 | Raise for huge chats, lower for tiny ones |
+| `--min-messages` | 5 | Counted per person, spam collapsed. Raise for huge chats, lower for tiny ones |
+| `--skip-start`, `--skip-end` | 60 s | Ignore the stream's opening and closing minute (greetings, goodbyes) |
 | `--vertical` | none | `center` crops the middle; `blur` keeps the full frame over a blurred background |
 | `--offset` | 0 | If chat timestamps are out of sync with the video |
 | `--copy` | off | Instant cuts with no re-encode, but no reframe and keyframe-inaccurate |
@@ -141,6 +142,12 @@ then submit the post links where the campaign asks.
 
 `activity.csv` has every window's count and score if you want to plot a stream's
 whole arc or tune thresholds.
+
+How a spike is scored: messages are counted per person (at most 3 per person per
+window, identical repeats once), so one spammer cannot make a spike. A window where
+one message is most of the traffic is flagged `spam?` and a window produced by one or
+two chatters is flagged `few people`; both are halved. Reaction words and genuine
+"clip it" shouts add to the score; clippers asking "how do I clip" do not.
 
 ## 6. Rules that get accounts banned or payouts denied
 
