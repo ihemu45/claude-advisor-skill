@@ -352,6 +352,8 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
     log(store, f"[{channel['name']}] {vid} | {title}")
 
     safe_id = vid.replace(":", "_")
+    if not local_chat and url:
+        log(store, f"  step 1/3: downloading chat replay ({platform_of(url)})...")
     chat = local_chat or (download_chat(url, os.path.join(sdir, safe_id)) if url else None)
     detector, n_msgs, bin_size, peaks = "chat", 0, 10.0, []
     if chat:
@@ -362,7 +364,12 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
             log(store, "  no usable chat and audio fallback is off, skipping")
             store.mark(vid, channel=channel["name"], title=title, result="no_chat")
             return 0
+        if not local_video:
+            log(store, "  step 1/3: no chat export here, downloading the audio track instead "
+                       "(a few minutes for a long stream, no output while it runs)...")
         media = local_video or download_audio(url, os.path.join(sdir, safe_id + "_audio"))
+        if media:
+            log(store, f"  step 2/3: scanning audio for loud moments ({os.path.getsize(media) // 1_000_000} MB)...")
         if not media:
             log(store, "  no chat and the audio could not be downloaded, skipping")
             store.mark(vid, channel=channel["name"], title=title, result="no_media")
@@ -383,6 +390,7 @@ def process_stream(store: Store, cfg: dict, channel: dict, stream: dict,
         return 0
 
     made = 0
+    log(store, f"  step 3/3: downloading and cutting {len(peaks)} clip window(s), about a minute each...")
     for i, p in enumerate(peaks, 1):
         start = max(0.0, p.start - float(cfg["lead"]))
         dur = float(cfg["duration"])
@@ -458,20 +466,34 @@ def fresh_enough(stream: dict, cfg: dict, channel: dict | None = None) -> bool:
 # commands
 # --------------------------------------------------------------------------- #
 
+def pick_channel(cfg: dict, name: str | None) -> dict:
+    chans = cfg.get("channels") or [{"name": "Stream", "handle": ""}]
+    if name:
+        for c in chans:
+            if c["name"].lower() == name.lower() or c.get("handle", "").lower() == name.lower():
+                return c
+        raise SystemExit(f"No channel named '{name}' in config. Names: {', '.join(c['name'] for c in chans)}")
+    enabled = [c for c in chans if c.get("enabled", True)]
+    return (enabled or chans)[0]
+
+
 def cmd_run(args) -> int:
     cfg = load_config(args.config)
     store = Store(cfg["workdir"])
     total = 0
     try:
         if args.local_chat or args.local_video:
-            ch = cfg["channels"][0] if cfg["channels"] else {"name": "Local", "handle": ""}
+            ch = pick_channel(cfg, args.channel)
             stream = {"id": args.stream_id or "local", "title": args.title or "local test", "url": ""}
             if store.processed(stream["id"]) and not args.force:
                 log(store, f"{stream['id']} already processed; add --force to redo it")
             else:
                 total += process_stream(store, cfg, ch, stream, local_chat=args.local_chat, local_video=args.local_video)
         elif args.video:
-            ch = cfg["channels"][0] if cfg["channels"] else {"name": "Stream", "handle": ""}
+            ch = pick_channel(cfg, args.channel)
+            if not args.channel:
+                log(store, f"no --channel given, using '{ch['name']}' for captions and rules; "
+                           f"pass --channel NAME to choose (names: {', '.join(c['name'] for c in cfg['channels'])})")
             vid = args.video.split("v=")[-1].split("&")[0].split("/")[-1]
             stream = {"id": vid, "title": args.title or vid, "url": args.video}
             if store.processed(vid) and not args.force:
@@ -582,6 +604,7 @@ def main() -> int:
     r.add_argument("--local-video", help="test mode: a local video file")
     r.add_argument("--stream-id", default=None)
     r.add_argument("--title", default=None)
+    r.add_argument("--channel", default=None, help="with --video: which config channel this stream belongs to, e.g. SypherPK")
     r.add_argument("--force", action="store_true", help="redo a stream that was already processed")
     r.set_defaults(func=cmd_run)
     s = sub.add_parser("status", help="show the queue")
