@@ -2,72 +2,124 @@
   "workdir": "~/clipfinder_data",
   "channels": [
     {
-      "name": "Tomo",
-      "handle": "Tomovids",
+      "name": "IShowSpeed",
+      "handle": "IShowSpeed",
       "game": "GTA 6",
-      "url": "https://www.youtube.com/@Tomovids/streams",
-      "campaign": "TOMO GTA VI Clipping ($2 per 1K, $150 cap)",
-      "campaign_url": "https://contentrewards.com/c/campaigns/df6de26f-86ec-4782-b818-1fc8053b99a4",
-      "hashtags": "#GTA6 #GTAVI #Tomo #gaming",
-      "credit": "clips from @Tomovids live stream",
-      "required_tags": "",
       "enabled": true,
-      "title_must_match": "GTA|GTAVI|GTA 6|GTA6"
+      "url": "https://www.youtube.com/@IShowSpeed/streams",
+      "list_limit": 40,
+      "max_stream_age_days": 30,
+      "title_must_match": "Expedia",
+      "clip_after_s": 10589,
+      "campaign": "$8,000 Expedia x IShowSpeed ($1 per 1K, $500 cap, Nov 6 stream from 2:56:29 only)",
+      "campaign_url": "https://contentrewards.com/c/campaigns/afeca1a0-f44c-46ad-8194-09d62b56589e",
+      "hashtags": "#IShowSpeed #Expedia #Speed",
+      "credit": "from IShowSpeed's Expedia stream, Expedia x @IShowSpeed",
+      "required_tags": "#Expedia",
+      "note": "Rules: reachclipping.com/Expedia-IShowSpeed. Caption MUST mention Expedia and Expedia must be a major focus. TikTok, Reels, Shorts only. If the Nov 6 stream is not in the channel's last 40 streams, run: python3 autoclip.py run --video <its URL>"
     },
     {
       "name": "SypherPK",
       "handle": "SypherPK",
       "game": "Fortnite",
+      "enabled": true,
       "url": "https://www.twitch.tv/sypherpk/videos?filter=archives&sort=time",
       "campaign": "SypherPK $7,500 Clipping Campaign ($2 per 1K, $500 cap, Nov 15 stream only)",
       "campaign_url": "https://contentrewards.com/c/campaigns/f2c529a0-6777-4e8a-b50b-4c8bd4e4d90f",
       "hashtags": "#SypherPK #fortnite #gaming",
       "credit": "clips from @SypherPK live stream",
       "required_tags": "",
-      "enabled": true,
-      "note": "Twitch chat needs TwitchDownloaderCLI on PATH; without it the audio detector is used."
+      "note": "Only the Nov 15 stream counts; feed that VOD with --video. Twitch chat needs TwitchDownloaderCLI, else audio detector."
     },
     {
       "name": "Dom",
       "handle": "dasgasdom3",
       "game": "GTA 6",
+      "enabled": true,
       "url": "https://kick.com/dasgasdom3/videos",
-      "campaign": "Dasgasd3m x RUCKUS | GTA 6 ($1 per 1K, $100 cap, TikTok + Shorts)",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City",
+      "campaign": "Dasgasd3m x RUCKUS | GTA 6 ($2 per 1K, $100 cap, TikTok + Shorts)",
       "campaign_url": "https://contentrewards.com/c/campaigns/051002dd-5c46-43d0-a446-43f2957ba3a9",
       "hashtags": "#GTA6 #GTAVI #gaming",
       "credit": "clips from Dom's GTA 6 stream on Kick",
       "required_tags": "#dasgasdom3 #ad",
-      "enabled": true,
-      "note": "Only his Nov 19 GTA 6 stream counts. Needs a GTA 6-specific TikTok/YouTube account. Kick has no chat export, so the audio detector is used. Join whop.com/gta6clipping for the submission link.",
-      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City"
+      "note": "Only his Nov 19 GTA 6 stream counts. GTA 6-specific account required. Kick has no chat export, audio detector used. Join whop.com/gta6clipping for the submission link."
     },
     {
       "name": "Clix",
       "handle": "Clix",
       "game": "GTA 6",
+      "enabled": true,
       "url": "https://www.twitch.tv/clix/videos?filter=archives&sort=time",
-      "campaign": "$5,000 Clix GTA VI Marathon Pool (split by views, paid when the marathon ends)",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City|marathon",
+      "campaign": "$5,000 Clix GTA VI Marathon Pool (split by views, 400K views minimum to qualify)",
       "campaign_url": "https://contentrewards.com/c/campaigns/985dc674-c75e-44fc-ac87-1b1506324389",
       "hashtags": "#Clix #GTA6 #GTAVI #gaming",
-      "credit": "clips from @Clix live stream",
-      "required_tags": "",
-      "enabled": true,
-      "note": "Check the brief at reachclipping.com/ClixGTA for his platform. If he streams on Kick, change url to https://kick.com/clix/videos",
-      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City"
+      "credit": "Clix on his GTA 6 marathon stream",
+      "required_tags": "#Clix",
+      "note": "Rules: reachclipping.com/ClixGTA. Caption must mention Clix and use #Clix. Audience must be 50%+ US/UK/CA/AU/NZ. Submit each link within 30 min of posting. No logos."
     },
     {
       "name": "Lacy",
       "handle": "Lacy",
       "game": "GTA 6",
-      "url": "https://kick.com/lacy/videos",
-      "campaign": "$40,000+ LACY CLIPPING CAMPAIGN (pool, 6,000+ clippers already)",
-      "campaign_url": "https://contentrewards.com/c/campaigns/6d9223d5-e666-41b4-b6ba-1366a88bfdc2",
-      "hashtags": "#Lacy #GTA6 #GTAVI #gaming",
-      "credit": "clips from Lacy's live stream",
-      "required_tags": "",
+      "enabled": true,
+      "url": "https://www.twitch.tv/lacy/videos?filter=archives&sort=time",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City|marathon",
+      "campaign": "$12,500 LACY GTA VI Marathon Pool (split by views, 750K views minimum to qualify)",
+      "campaign_url": "https://contentrewards.com/c/discover",
+      "hashtags": "#LACY #GTA6 #GTAVI #gaming",
+      "credit": "LACY on his GTA 6 marathon stream",
+      "required_tags": "#LACY",
+      "note": "Rules: reachclipping.com/LACYGTA. Caption must mention LACY and use #LACY. Replace campaign_url with the campaign page URL from your browser. Same audience and 30-minute rules as Clix."
+    },
+    {
+      "name": "Kai Cenat",
+      "handle": "KaiCenat",
+      "game": "GTA 6",
+      "enabled": true,
+      "url": "https://www.twitch.tv/kaicenat/videos?filter=archives&sort=time",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City",
+      "campaign": "Kai Cenat $10,000 GTA 6 Pool (Clipped & Shipped, split by views)",
+      "campaign_url": "https://contentrewards.com/c/campaigns/1d2bcb00-c904-415f-aa82-f95b96baad86",
+      "hashtags": "#KaiCenat #GTA6 #GTAVI #gaming",
+      "credit": "Kai Cenat on his GTA 6 stream",
+      "required_tags": "#KaiCenat",
+      "note": "Rules file unlocks after joining; add any required tag to required_tags."
+    },
+    {
+      "name": "KreekCraft",
+      "handle": "KreekCraft",
+      "game": "GTA 6",
       "enabled": false,
-      "note": "Very crowded pool, so off by default. Set enabled to true to include it.",
-      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City"
+      "url": "https://www.youtube.com/@KreekCraft/streams",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6|Vice City",
+      "campaign": "KreekCraft GTA 6 Clipping (ClipLaunch, $1 per 1K, $300 cap, $6,824 budget)",
+      "campaign_url": "https://contentrewards.com/c/campaigns/2eaa14fb-6927-4136-897e-b096e0d907d6",
+      "hashtags": "#KreekCraft #GTA6 #GTAVI #gaming",
+      "credit": "KreekCraft on his GTA 6 live stream",
+      "required_tags": "#KreekCraft",
+      "overlay": {
+        "png": "overlays/kreekcraft.png",
+        "position": "top",
+        "width": 900,
+        "margin": 60
+      },
+      "note": "Every clip must carry KreekCraft's overlay. Download it from the campaign's reference files, save it as overlays/kreekcraft.png, then set enabled to true."
+    },
+    {
+      "name": "Tomo",
+      "handle": "Tomovids",
+      "game": "GTA 6",
+      "enabled": false,
+      "url": "https://www.youtube.com/@Tomovids/streams",
+      "title_must_match": "GTA|GTAVI|GTA 6|GTA6",
+      "campaign": "TOMO GTA VI Clipping ($1.50 per 1K, $150 cap)",
+      "campaign_url": "https://contentrewards.com/c/campaigns/df6de26f-86ec-4782-b818-1fc8053b99a4",
+      "hashtags": "#GTA6 #GTAVI #Tomo #gaming",
+      "credit": "clips from @Tomovids live stream",
+      "required_tags": "",
+      "note": "Off: clip limit reached. Turn back on when the limit resets."
     }
   ],
   "max_streams_per_run": 2,
@@ -82,13 +134,18 @@
   "min_stream_minutes": 20,
   "max_stream_age_days": 7,
   "llm_hooks": false,
-  "youtube": {
-    "privacy": "private",
-    "client_secret": "client_secret.json"
-  },
   "auto_publish": {
     "enabled": false,
     "min_confidence": "strong",
-    "max_per_run": 3
+    "max_per_run": 3,
+    "hours": [
+      9,
+      23
+    ],
+    "notify": true
+  },
+  "youtube": {
+    "privacy": "private",
+    "client_secret": "client_secret.json"
   }
-}\n
+}
