@@ -477,9 +477,28 @@ def pick_channel(cfg: dict, name: str | None) -> dict:
     return (enabled or chans)[0]
 
 
+def acquire_lock(store: Store):
+    """Return an open lock file, or None if another autoclip run holds it."""
+    import fcntl
+    fh_ = open(os.path.join(store.workdir, ".autoclip.lock"), "w")
+    try:
+        fcntl.flock(fh_, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        fh_.close()
+        return None
+    fh_.write(str(os.getpid()))
+    fh_.flush()
+    return fh_
+
+
 def cmd_run(args) -> int:
     cfg = load_config(args.config)
     store = Store(cfg["workdir"])
+    lock = acquire_lock(store)
+    if lock is None:
+        log(store, "another autoclip run is still in progress (scheduled or manual); this one exits. "
+                   "Check logs/autoclip.log, or wait for it to finish.")
+        return 0
     total = 0
     try:
         if args.local_chat or args.local_video:
@@ -537,10 +556,13 @@ def auto_publish(store: Store, cfg: dict) -> None:
         return
     floor = CONF_LEVELS.get(ap_cfg.get("min_confidence", "strong"), 2)
     limit = int(ap_cfg.get("max_per_run", 3))
+    enabled_names = {ch["name"] for ch in cfg.get("channels", []) if ch.get("enabled", True)}
     picked = 0
     for c in sorted(store.queue, key=lambda c: -c["score"]):
         if c["status"] != "pending" or CONF_LEVELS.get(c["confidence"], 0) < floor:
             continue
+        if c.get("channel") not in enabled_names:
+            continue  # the campaign is parked or capped; keep it for the review page only
         if c.get("flags") and "spam?" in c["flags"]:
             continue
         c["status"] = "approved"
