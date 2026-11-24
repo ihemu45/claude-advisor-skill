@@ -11,7 +11,7 @@ This repository holds two things:
 
 **Hourly deal radar.** An automated agent pulls hot deals, discounts, coupon codes and Black Friday offers from public feeds (Slickdeals, deal subreddits, the Best Buy API) and, with an API key, asks Claude to research live deals at Amazon, Best Buy, Target, Walmart and more via web search. Everything is normalised into JSON that a static, terminal-styled site renders: browse by category, search an item, compare the lowest price per store, copy coupon codes.
 
-- Site: `https://ihemu45.github.io/CLAUDE-CLOUD-SESSIONS/` once GitHub Pages is enabled (see setup).
+- Site: `https://ihemu45.github.io/claude-advisor-skill/` once GitHub Pages is enabled (see setup).
 - Pages: home, deals browser, stores, docs, changelog, about.
 - Agent: `python -m agent` (Python 3.12, `requests` + `anthropic`), 55 offline tests.
 - Workflow: `.github/workflows/refresh-deals.yml` runs hourly, on manual dispatch, and on pushes to `main`.

@@ -17,7 +17,7 @@ import requests
 from .categorize import clean_title, first_url_in, is_aggregator, strip_html
 from .config import FIXTURES_DIR, SOURCES_FILE
 
-USER_AGENT = "dealgrep/0.1 (+https://github.com/ihemu45/CLAUDE-CLOUD-SESSIONS; hourly deal aggregator)"
+USER_AGENT = "dealgrep/0.1 (+https://github.com/ihemu45/claude-advisor-skill; hourly deal aggregator)"
 TIMEOUT = 25
 
 
