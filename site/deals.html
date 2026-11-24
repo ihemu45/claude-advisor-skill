@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" data-root="./">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browse deals · dealgrep</title>
+<meta name="description" content="Browse every tracked deal by category and store. Search for an item to compare prices, discounts and coupon codes across Amazon, Best Buy, Target, Walmart and more.">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/site.css">
+<script>try{if(localStorage.getItem('dealgrep.theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}</script>
+</head>
+<body data-page="deals">
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="./"><span class="prompt">~/dealgrep $</span><span class="cursor" aria-hidden="true"></span></a>
+  <nav class="nav" aria-label="Primary">
+    <a href="./" data-nav="home">home</a>
+    <a href="./deals.html" data-nav="deals">deals</a>
+    <a href="./stores.html" data-nav="stores">stores</a>
+    <a href="./docs/" data-nav="docs">docs</a>
+    <a href="./changelog/" data-nav="changelog">changelog</a>
+    <a href="./about/" data-nav="about">about</a>
+  </nav>
+  <button class="iconbtn" data-theme-toggle type="button"><span class="t">theme: </span><span class="v">dark</span></button>
+</div></header>
+<div class="banner" data-sample-banner hidden><div class="wrap"><span class="tagline">sample data</span><span>The hourly agent has not run yet. These placeholder deals only show the layout; their links go to store search pages, not real offers.</span></div></div>
+<div class="statusline"><div class="wrap" data-statusline><span>loading status…</span></div></div>
+
+<main><div class="wrap browse">
+  <aside class="sidebar" data-sidebar aria-label="Categories"></aside>
+  <section>
+    <div class="toolbar">
+      <label class="search"><span class="sr-only">Search deals</span><input class="input" type="search" data-search placeholder="search an item, e.g. robot vacuum" autocomplete="off"><kbd>/</kbd></label>
+      <label><span class="sr-only">Store</span><select class="select" data-store><option value="">all stores</option></select></label>
+      <label><span class="sr-only">Sort</span><select class="select" data-sort>
+        <option value="heat">sort: heat</option>
+        <option value="discount">sort: biggest discount</option>
+        <option value="price-asc">sort: price low → high</option>
+        <option value="price-desc">sort: price high → low</option>
+        <option value="newest">sort: newest</option>
+      </select></label>
+      <label><span class="sr-only">Minimum discount</span><select class="select" data-min>
+        <option value="0">any discount</option>
+        <option value="20">≥ 20% off</option>
+        <option value="30">≥ 30% off</option>
+        <option value="40">≥ 40% off</option>
+        <option value="50">≥ 50% off</option>
+        <option value="60">≥ 60% off</option>
+      </select></label>
+    </div>
+    <div class="toolbar-row2">
+      <span class="muted">filters:</span>
+      <button class="chip" type="button" data-chip="bf" aria-pressed="false">black friday / cyber monday</button>
+      <button class="chip" type="button" data-chip="coupon" aria-pressed="false">has coupon code</button>
+      <button class="chip" type="button" data-reset>reset</button>
+    </div>
+    <div class="results-head" data-results-head><h2>loading…</h2></div>
+    <div class="compare" data-compare hidden></div>
+    <div class="grid" data-results><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+    <div class="loadmore"><button class="btn" type="button" data-more hidden>show more</button></div>
+  </section>
+</div></main>
+
+<footer><div class="wrap">
+  <span>dealgrep · refreshed hourly by an automated agent · prices and availability change fast, verify at the store</span>
+  <span><a href="https://github.com/ihemu45/CLAUDE-CLOUD-SESSIONS">source on github</a> · <a href="./about/">about &amp; contact</a></span>
+</div></footer>
+<script src="./assets/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-root="./">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dealgrep — hourly deal radar</title>
+<meta name="description" content="dealgrep tracks the best deals, discounts, coupons and Black Friday offers at Amazon, Best Buy, Target, Walmart and more, refreshed every hour by an automated research agent.">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/site.css">
+<script>try{if(localStorage.getItem('dealgrep.theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}</script>
+</head>
+<body data-page="home">
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="./"><span class="prompt">~/dealgrep $</span><span class="cursor" aria-hidden="true"></span></a>
+  <nav class="nav" aria-label="Primary">
+    <a href="./" data-nav="home">home</a>
+    <a href="./deals.html" data-nav="deals">deals</a>
+    <a href="./stores.html" data-nav="stores">stores</a>
+    <a href="./docs/" data-nav="docs">docs</a>
+    <a href="./changelog/" data-nav="changelog">changelog</a>
+    <a href="./about/" data-nav="about">about</a>
+  </nav>
+  <button class="iconbtn" data-theme-toggle type="button"><span class="t">theme: </span><span class="v">dark</span></button>
+</div></header>
+<div class="banner" data-sample-banner hidden><div class="wrap"><span class="tagline">sample data</span><span>The hourly agent has not run yet. These placeholder deals only show the layout; their links go to store search pages, not real offers.</span></div></div>
+<div class="statusline"><div class="wrap" data-statusline><span>loading status…</span></div></div>
+
+<main>
+  <section class="hero"><div class="wrap hero-grid">
+    <div>
+      <h1>grep the internet<br>for <span class="hl">deals</span>, every hour.</h1>
+      <p class="lead">An automated agent pulls the hot deals, discounts, coupon codes and Black Friday offers from Amazon, Best Buy, Target, Walmart and more, sorts them into categories, and republishes this page every hour.</p>
+      <div class="cta">
+        <a class="btn primary" href="./deals.html">browse all deals →</a>
+        <a class="btn" href="./deals.html?bf=1">black friday only</a>
+        <a class="btn" href="./deals.html?coupon=1">with coupon codes</a>
+      </div>
+      <p class="small muted" style="margin-top:14px" data-last-run></p>
+    </div>
+    <div class="term" aria-label="Last agent run summary">
+      <div class="term-bar"><i></i><i></i><i></i><span>agent — last run</span></div>
+      <div class="term-body" data-term>loading…</div>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="stats" data-stats aria-label="Site statistics">
+      <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>hot right now</h2><a class="more" href="./deals.html">all deals sorted by heat →</a></div>
+    <div class="grid" data-hot><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>by category</h2><span class="more muted">pick a category, then search for an item inside it</span></div>
+    <div class="grid cols-4" data-categories></div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>by store</h2><a class="more" href="./stores.html">all stores →</a></div>
+    <div class="toolbar-row2" data-stores></div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>how it works</h2><a class="more" href="./docs/">read the docs →</a></div>
+    <div class="steps">
+      <div class="step"><div class="n">01 · collect</div><h3>Public deal feeds, every hour</h3><p>A GitHub Actions job runs on a schedule and pulls Slickdeals, deal subreddits and the Best Buy API. Nothing is scraped from store pages.</p></div>
+      <div class="step"><div class="n">02 · research</div><h3>Claude searches the web</h3><p>With an API key configured, Claude researches a rotating slice of categories using live web search and reports only deals it could confirm, with store, price and code.</p></div>
+      <div class="step"><div class="n">03 · publish</div><h3>Normalise, score, deploy</h3><p>Deals are de-duplicated across sources, categorised, given a heat score and written to JSON. The static site you are reading is redeployed with the fresh data.</p></div>
+    </div>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>dealgrep · refreshed hourly by an automated agent · prices and availability change fast, verify at the store</span>
+  <span><a href="https://github.com/ihemu45/CLAUDE-CLOUD-SESSIONS">source on github</a> · <a href="./about/">about &amp; contact</a></span>
+</div></footer>
+<script src="./assets/site.js" defer></script>
+</body>
+</html>

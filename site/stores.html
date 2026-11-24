@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" data-root="./">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stores · dealgrep</title>
+<meta name="description" content="Deals by store: Amazon, Best Buy, Target, Walmart, Costco, Newegg and more, with counts, average discounts and the hottest deal at each.">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/site.css">
+<script>try{if(localStorage.getItem('dealgrep.theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}</script>
+</head>
+<body data-page="stores">
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="./"><span class="prompt">~/dealgrep $</span><span class="cursor" aria-hidden="true"></span></a>
+  <nav class="nav" aria-label="Primary">
+    <a href="./" data-nav="home">home</a>
+    <a href="./deals.html" data-nav="deals">deals</a>
+    <a href="./stores.html" data-nav="stores">stores</a>
+    <a href="./docs/" data-nav="docs">docs</a>
+    <a href="./changelog/" data-nav="changelog">changelog</a>
+    <a href="./about/" data-nav="about">about</a>
+  </nav>
+  <button class="iconbtn" data-theme-toggle type="button"><span class="t">theme: </span><span class="v">dark</span></button>
+</div></header>
+<div class="banner" data-sample-banner hidden><div class="wrap"><span class="tagline">sample data</span><span>The hourly agent has not run yet. These placeholder deals only show the layout; their links go to store search pages, not real offers.</span></div></div>
+<div class="statusline"><div class="wrap" data-statusline><span>loading status…</span></div></div>
+
+<main>
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>stores</h2><span class="more muted">same deal at several stores? search it on the deals page to compare</span></div>
+    <div class="grid" data-store-grid><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  </div></section>
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>feed health</h2><span class="more muted">what the agent pulled on its last run</span></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>source</th><th>status</th><th class="num">items</th><th class="num">ms</th><th>notes</th></tr></thead>
+      <tbody data-source-table></tbody>
+    </table></div>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>dealgrep · refreshed hourly by an automated agent · prices and availability change fast, verify at the store</span>
+  <span><a href="https://github.com/ihemu45/CLAUDE-CLOUD-SESSIONS">source on github</a> · <a href="./about/">about &amp; contact</a></span>
+</div></footer>
+<script src="./assets/site.js" defer></script>
+</body>
+</html>
