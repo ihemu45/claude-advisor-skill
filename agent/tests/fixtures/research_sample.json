@@ -1,0 +1,15 @@
+{
+  "hot": [
+    {"title": "55\" OLED 4K Smart TV (sample research result)", "url": "https://www.bestbuy.com/site/searchpage.jsp?st=55+inch+oled+tv", "store": "Best Buy", "price": 899.99, "list_price": 1499.99, "coupon": null, "expires": "2026-11-30", "note": "Lowest price seen this year on this panel size."},
+    {"title": "Robot Vacuum with Self-Empty Base (sample research result)", "url": "https://www.amazon.com/s?k=robot+vacuum+self+empty", "store": "Amazon", "price": 199.0, "list_price": 449.99, "coupon": null, "expires": null, "note": "Black Friday price, 55% off list."},
+    {"title": "Stand Mixer 5.5-Quart (sample research result)", "url": "https://www.target.com/s?searchTerm=stand+mixer+5.5+quart", "store": "Target", "price": 249.99, "list_price": 449.99, "coupon": null, "expires": "2026-11-29", "note": "Includes a $30 gift card with purchase."}
+  ],
+  "gaming": [
+    {"title": "Wireless Gaming Headset w/ Mic (sample research result)", "url": "https://www.walmart.com/search?q=wireless+gaming+headset", "store": "Walmart", "price": 59.0, "list_price": 99.99, "coupon": null, "expires": null, "note": "Lowest price in six months."},
+    {"title": "Racing Wheel & Pedals Bundle (sample research result)", "url": "https://www.bestbuy.com/site/searchpage.jsp?st=racing+wheel+bundle", "store": "Best Buy", "price": 199.99, "list_price": 299.99, "coupon": null, "expires": null, "note": "Rarely discounted bundle."}
+  ],
+  "toys-kids": [
+    {"title": "Ride-On Electric Car 12V w/ Remote (sample research result)", "url": "https://www.walmart.com/search?q=ride+on+car+12v", "store": "Walmart", "price": 129.0, "list_price": 229.0, "coupon": null, "expires": null, "note": "Black Friday toy deal."},
+    {"title": "Wooden Train Set 120 Pieces (sample research result)", "url": "https://www.amazon.com/s?k=wooden+train+set", "store": "Amazon", "price": 39.99, "list_price": 69.99, "coupon": "TRAIN15", "expires": null, "note": "Extra 15% off with code at checkout."}
+  ]
+}

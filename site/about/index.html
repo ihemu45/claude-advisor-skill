@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · dealgrep</title>
+<meta name="description" content="What dealgrep is, how the hourly research agent works, who runs it, and how to get in touch.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{if(localStorage.getItem('dealgrep.theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}</script>
+</head>
+<body data-page="about">
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="../"><span class="prompt">~/dealgrep $</span><span class="cursor" aria-hidden="true"></span></a>
+  <nav class="nav" aria-label="Primary">
+    <a href="../" data-nav="home">home</a>
+    <a href="../deals.html" data-nav="deals">deals</a>
+    <a href="../stores.html" data-nav="stores">stores</a>
+    <a href="../docs/" data-nav="docs">docs</a>
+    <a href="../changelog/" data-nav="changelog">changelog</a>
+    <a href="../about/" data-nav="about">about</a>
+  </nav>
+  <button class="iconbtn" data-theme-toggle type="button"><span class="t">theme: </span><span class="v">dark</span></button>
+</div></header>
+<div class="banner" data-sample-banner hidden><div class="wrap"><span class="tagline">sample data</span><span>The hourly agent has not run yet. The deals shown on this site are placeholders.</span></div></div>
+<div class="statusline"><div class="wrap" data-statusline><span>loading status…</span></div></div>
+
+<main><div class="wrap docs">
+  <nav class="toc" aria-label="On this page">
+    <div class="toc-title">on this page</div>
+    <a href="#what">what it is</a>
+    <a href="#why">why</a>
+    <a href="#who">who runs it</a>
+    <a href="#contact">contact</a>
+    <a href="#disclaimer">disclaimer</a>
+  </nav>
+  <article class="prose">
+    <h1>about dealgrep</h1>
+    <p class="lead">dealgrep is a small, open deals radar: an automated agent checks public deal feeds and searches the web every hour, then publishes what it finds as a fast static site.</p>
+
+    <h2 id="what">what it is<a class="anchor" href="#what">#</a></h2>
+    <p>Every hour a scheduled job collects deals from public sources (Slickdeals, deal subreddits, the Best Buy API) and, when an API key is configured, asks Claude to research live deals at Amazon, Best Buy, Target, Walmart and other large US retailers using web search. Everything is normalised into one data file: store, category, price, list price, discount, coupon code and when the deal was first seen. The site is plain HTML that reads that file, so it loads fast and works without an account.</p>
+    <p>Pick a <a href="../deals.html">category</a> to see its offers, then type an item name to filter down to that item and compare the lowest price per store. Coupon codes are shown right on the card with a copy button.</p>
+
+    <h2 id="why">why<a class="anchor" href="#why">#</a></h2>
+    <p>Deal sites are noisy and store sale pages are hard to compare. dealgrep does the boring part, checking many places every hour, and keeps the result in one searchable list with a plain heat score so the best offers float to the top. It is also a working example of running an hourly research agent for free on GitHub Actions and GitHub Pages.</p>
+
+    <h2 id="who">who runs it<a class="anchor" href="#who">#</a></h2>
+    <p>dealgrep is maintained by <a href="https://github.com/ihemu45">ihemu45</a> on GitHub. The code, the agent and this site live in one public repository, so you can read exactly how deals are collected and scored, or run your own copy.</p>
+
+    <h2 id="contact">contact<a class="anchor" href="#contact">#</a></h2>
+    <ul>
+      <li><strong>Found a wrong price, a dead link or a miscategorised deal?</strong> <a href="https://github.com/ihemu45/claude-advisor-skill/issues/new">Open an issue</a> with the deal title and store.</li>
+      <li><strong>Want a source added?</strong> Any public RSS or JSON feed works. See <a href="../docs/#adding-a-source">adding a source</a> in the docs, then open an issue or a pull request.</li>
+      <li><strong>Something else?</strong> Issues are the quickest way to reach the maintainer.</li>
+    </ul>
+
+    <h2 id="disclaimer">disclaimer<a class="anchor" href="#disclaimer">#</a></h2>
+    <div class="callout">Prices, stock and coupon codes change by the minute. dealgrep shows what a source reported at a point in time and may lag by up to an hour. Always check the price on the store page before you buy. dealgrep has no affiliate relationship with any store listed and earns nothing from clicks.</div>
+    <p class="small muted">Store names and logos belong to their owners. Deal data is aggregated from public feeds and is reproduced for information only.</p>
+  </article>
+</div></main>
+
+<footer><div class="wrap">
+  <span>dealgrep · refreshed hourly by an automated agent · prices and availability change fast, verify at the store</span>
+  <span><a href="https://github.com/ihemu45/claude-advisor-skill">source on github</a> · <a href="../about/">about &amp; contact</a></span>
+</div></footer>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

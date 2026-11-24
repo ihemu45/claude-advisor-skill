@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs · dealgrep</title>
+<meta name="description" content="How dealgrep works: the hourly GitHub Actions agent, deal sources, the Claude research step, configuration, data schema and how to run your own copy.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{if(localStorage.getItem('dealgrep.theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}</script>
+</head>
+<body data-page="docs">
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="../"><span class="prompt">~/dealgrep $</span><span class="cursor" aria-hidden="true"></span></a>
+  <nav class="nav" aria-label="Primary">
+    <a href="../" data-nav="home">home</a>
+    <a href="../deals.html" data-nav="deals">deals</a>
+    <a href="../stores.html" data-nav="stores">stores</a>
+    <a href="../docs/" data-nav="docs">docs</a>
+    <a href="../changelog/" data-nav="changelog">changelog</a>
+    <a href="../about/" data-nav="about">about</a>
+  </nav>
+  <button class="iconbtn" data-theme-toggle type="button"><span class="t">theme: </span><span class="v">dark</span></button>
+</div></header>
+<div class="banner" data-sample-banner hidden><div class="wrap"><span class="tagline">sample data</span><span>The hourly agent has not run yet. Follow <a href="#setup">setup</a> below to start it.</span></div></div>
+<div class="statusline"><div class="wrap" data-statusline><span>loading status…</span></div></div>
+
+<main><div class="wrap docs">
+  <nav class="toc" aria-label="On this page">
+    <div class="toc-title">docs</div>
+    <a href="#overview">overview</a>
+    <a href="#how-it-works">how it works</a>
+    <a href="#using-the-site">using the site</a>
+    <a href="#setup">setup</a>
+    <a href="#configuration">configuration</a>
+    <a href="#sources">sources</a>
+    <a href="#adding-a-source">adding a source</a>
+    <a href="#research">research agent</a>
+    <a href="#heat">heat score</a>
+    <a href="#data">data files</a>
+    <a href="#local">running locally</a>
+    <a href="#faq">faq &amp; limits</a>
+  </nav>
+
+  <article class="prose">
+    <h1>docs</h1>
+    <p class="lead">dealgrep is two things: a Python agent that runs hourly in GitHub Actions and writes JSON, and a static site on GitHub Pages that renders it. There is no server, database or build step.</p>
+
+    <h2 id="overview">overview<a class="anchor" href="#overview">#</a></h2>
+    <ul>
+      <li><strong>Collect</strong>: public deal feeds (Slickdeals RSS, deal subreddits, Best Buy API) are fetched in parallel.</li>
+      <li><strong>Research</strong>: optionally, Claude searches the web for live deals in a rotating set of categories and returns structured JSON.</li>
+      <li><strong>Normalise</strong>: each item gets a store, category, price, list price, discount, coupon code and tags; duplicates across sources are merged by canonical URL.</li>
+      <li><strong>Score</strong>: a 0 to 100 heat score ranks deals; deals unseen for 48 hours are dropped.</li>
+      <li><strong>Publish</strong>: <code>deals.json</code>, <code>meta.json</code> and <code>runs.json</code> are written and the site is redeployed.</li>
+    </ul>
+
+    <h2 id="how-it-works">how it works<a class="anchor" href="#how-it-works">#</a></h2>
+<pre><code>  cron "7 * * * *" ──▶ GitHub Actions: refresh-deals.yml
+                           │
+                           ├─ python -m agent --out site/data
+                           │     ├─ load previous deals.json from the live site  (history)
+                           │     ├─ sources.py   : RSS / Reddit / Best Buy  ─┐
+                           │     ├─ research.py  : Claude + web_search       ─┼─▶ raw items
+                           │     ├─ categorize.py: store, price, coupon, tags ◀┘
+                           │     └─ pipeline.py  : merge, dedupe, heat, write JSON
+                           │
+                           └─ upload site/ as the Pages artifact ──▶ deploy-pages
+                                                                          │
+   browser ◀── index.html, deals.html … + assets/site.js ◀── fetch data/*.json</code></pre>
+    <p>History lives in the deployed site itself: each run first downloads the previous <code>deals.json</code> from the live Pages URL, so first-seen dates, seen counts and price history carry forward without committing data to git. If the live file is missing (first run) the agent starts fresh.</p>
+
+    <h2 id="using-the-site">using the site<a class="anchor" href="#using-the-site">#</a></h2>
+    <ul>
+      <li><strong>Browse by category</strong>: the <a href="../deals.html">deals</a> page lists categories on the left with live counts. Click one to filter.</li>
+      <li><strong>Search an item inside a category</strong>: type in the search box (or press <kbd>/</kbd>). Matching deals are listed and a <em>lowest price by store</em> strip appears above them so you can compare Amazon vs Best Buy vs Target at a glance.</li>
+      <li><strong>Filters</strong>: store, minimum discount, Black Friday / Cyber Monday only, has coupon code. Every filter is in the URL, so a filtered view can be bookmarked or shared.</li>
+      <li><strong>Coupon codes</strong> sit on the card with a copy button. Tags like <code>#price-drop</code>, <code>#new</code> and <code>#researched</code> explain where a deal came from.</li>
+      <li><strong>Heat bars</strong> summarise discount, source agreement, freshness and event tags. See <a href="#heat">heat score</a>.</li>
+    </ul>
+
+    <h2 id="setup">setup<a class="anchor" href="#setup">#</a></h2>
+    <p>Everything is in the repository. To run your own copy or to turn on the hourly job for this one:</p>
+    <ol>
+      <li><strong>Merge to <code>main</code></strong>. Scheduled workflows only run from the default branch.</li>
+      <li><strong>Enable GitHub Pages with the “GitHub Actions” source.</strong> Repository → Settings → Pages → Build and deployment → Source → <em>GitHub Actions</em>. The workflow also tries to enable this itself on its first run.</li>
+      <li><strong>Add secrets</strong> (Settings → Secrets and variables → Actions → Secrets):
+        <ul>
+          <li><code>ANTHROPIC_API_KEY</code>: turns on the Claude research step. Without it the site still works from the public feeds alone.</li>
+          <li><code>BESTBUY_API_KEY</code> (optional): enables the official Best Buy products API. Free keys are issued at developer.bestbuy.com.</li>
+        </ul>
+      </li>
+      <li><strong>Run it once by hand</strong>: Actions → <em>refresh deals and deploy</em> → Run workflow. The first run replaces the sample data; after that the cron takes over every hour.</li>
+    </ol>
+    <div class="callout info">The site URL for a project repository is <code>https://&lt;user&gt;.github.io/&lt;repo&gt;/</code>. GitHub Pages on a <em>private</em> repository needs a paid plan; public repositories are free.</div>
+
+    <h2 id="configuration">configuration<a class="anchor" href="#configuration">#</a></h2>
+    <p>Tunables are read from environment variables. In GitHub Actions set them as repository <em>variables</em> (Settings → Secrets and variables → Actions → Variables); the workflow forwards them. Empty values fall back to the defaults.</p>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>variable</th><th>default</th><th>meaning</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">RESEARCH_PER_RUN</td><td class="mono">2</td><td>Categories researched by Claude per hourly run. They rotate, so with 18 categories each one is refreshed about every 9 hours. <code>0</code> disables per-category research.</td></tr>
+        <tr><td class="mono">RESEARCH_HOT</td><td class="mono">1</td><td>Also run one cross-category “hottest deals right now” query each hour. <code>0</code> turns it off.</td></tr>
+        <tr><td class="mono">RESEARCH_MODEL</td><td class="mono">claude-opus-5-5</td><td>Model used for research. Any current Claude model id works; cheaper models lower the bill at some cost in judgement.</td></tr>
+        <tr><td class="mono">RESEARCH_EFFORT</td><td class="mono">medium</td><td>Reasoning effort: <code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code>, <code>max</code>.</td></tr>
+        <tr><td class="mono">RESEARCH_MAX_SEARCHES</td><td class="mono">8</td><td>Web searches Claude may run per research request.</td></tr>
+        <tr><td class="mono">STALE_HOURS</td><td class="mono">48</td><td>Drop a deal after this many hours without any source reporting it.</td></tr>
+        <tr><td class="mono">MAX_DEALS</td><td class="mono">1500</td><td>Hard cap on the published list (highest heat wins).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="sources">sources<a class="anchor" href="#sources">#</a></h2>
+    <p>Sources are declared in <code>agent/sources.json</code>. All of them are public feeds or official APIs; dealgrep does not scrape store pages (see <a href="#faq">faq</a>).</p>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>source</th><th>type</th><th>needs</th><th>notes</th></tr></thead>
+      <tbody>
+        <tr><td>Slickdeals frontpage &amp; popular</td><td class="mono">rss</td><td>–</td><td>Community-vetted deals; the store is read from the post text and the outbound link.</td></tr>
+        <tr><td>r/deals, r/blackfriday</td><td class="mono">reddit</td><td>–</td><td>JSON listing with an Atom fallback. Score feeds the heat.</td></tr>
+        <tr><td>r/buildapcsales, r/GameDeals, r/consoledeals</td><td class="mono">reddit</td><td>–</td><td>Category hints: computers / gaming.</td></tr>
+        <tr><td>r/frugalmalefashion, r/frugalfemalefashion</td><td class="mono">reddit</td><td>–</td><td>Category hint: fashion.</td></tr>
+        <tr><td>Best Buy products API</td><td class="mono">bestbuy</td><td class="mono">BESTBUY_API_KEY</td><td>On-sale items with ≥15% savings, structured prices.</td></tr>
+        <tr><td>Claude research</td><td class="mono">–</td><td class="mono">ANTHROPIC_API_KEY</td><td>Live web search across Amazon, Best Buy, Target, Walmart, Costco, Newegg, B&amp;H, Home Depot, Lowe's.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="adding-a-source">adding a source<a class="anchor" href="#adding-a-source">#</a></h2>
+    <p>Append an object to <code>agent/sources.json</code>. Any RSS 2.0 or Atom feed works out of the box:</p>
+<pre><code>{
+  "id": "woot_daily",
+  "name": "Woot daily deals",
+  "type": "rss",
+  "url": "https://example.com/feed.xml",
+  "homepage": "https://example.com/",
+  "weight": 8,
+  "store_hint": "woot",
+  "category_hint": null
+}</code></pre>
+    <p><code>weight</code> (0–25) is how much trust the source adds to the heat score. <code>store_hint</code> and <code>category_hint</code> are used when the item text does not say. Add <code>"requires_env": "SOME_KEY"</code> and <code>{SOME_KEY}</code> in the URL for keyed APIs; the source is skipped cleanly when the key is missing. Run the tests after editing.</p>
+
+    <h2 id="research">research agent<a class="anchor" href="#research">#</a></h2>
+    <p>With <code>ANTHROPIC_API_KEY</code> set, each hourly run asks Claude (default <code>claude-opus-5-5</code>) to research deals using the server-side <code>web_search</code> tool: one request per category in this hour's rotation plus one “hottest deals” request. The prompt asks for 6 to 15 deals with a direct retailer URL, confirmed price, list price and any promo code, and to skip anything it could not confirm. The reply is parsed as JSON and validated: items on aggregator domains, unknown stores or without a price are discarded. Researched deals carry the <code>#researched</code> tag and show Claude's one-line note.</p>
+    <div class="callout"><strong>Cost.</strong> Each research request reads tens of thousands of tokens of search results. As a rough guide, three requests per hour on Opus 5.5 is on the order of $15–25 a day; check the usage page in the Anthropic Console after the first day and tune <code>RESEARCH_PER_RUN</code>, <code>RESEARCH_HOT</code>, <code>RESEARCH_MAX_SEARCHES</code> or <code>RESEARCH_MODEL</code>. Research is entirely optional: leave the key unset and the feeds still refresh hourly for free.</div>
+    <p>Safety classifiers can occasionally decline a request; the agent opts into Anthropic's server-side fallback so another model finishes the turn, and a refusal is logged in the run report rather than failing the run.</p>
+
+    <h2 id="heat">heat score<a class="anchor" href="#heat">#</a></h2>
+    <p>Heat is a 0–100 number computed in <code>pipeline.compute_heat</code>:</p>
+    <ul>
+      <li>up to <strong>56</strong> from the discount percentage (capped at 70% off);</li>
+      <li>up to <strong>25</strong> from the most trusted source that reported it (Slickdeals frontpage 25, Claude research 20, Best Buy API 12, subreddits 6–10);</li>
+      <li>up to <strong>20</strong> from Reddit score, plus <strong>6</strong> per extra source that agrees (max 18);</li>
+      <li>bonuses for Black Friday / Cyber Monday tags (+8), coupon (+4), lightning or today-only (+5), a price drop since last seen (+6), first seen under 6 h (+10) or 24 h (+5);</li>
+      <li>penalties for refurbished items (−6) and deals older than 72 h (−5).</li>
+    </ul>
+
+    <h2 id="data">data files<a class="anchor" href="#data">#</a></h2>
+    <p>Everything the site shows is in three JSON files under <code>data/</code>, which you are free to consume directly.</p>
+<pre><code>// data/deals.json
+{ "generated_at": "2026-11-24T16:07:00Z", "sample": false, "deals": [ {
+    "id": "3f9c…",                 // sha1 of the canonical URL
+    "title": "…", "url": "https://www.bestbuy.com/…",
+    "source_url": "https://slickdeals.net/f/…",   // thread, if any
+    "store": "bestbuy", "store_name": "Best Buy",
+    "category": "tv-home-theater",
+    "price": 499.99, "list_price": 799.99, "discount_pct": 38,
+    "coupon": "SAVE30" | null, "expires": "2026-11-30" | null,
+    "note": "…",                   // Claude's one-liner, research deals only
+    "tags": ["black-friday", "new", "coupon"],
+    "sources": ["slickdeals_frontpage", "reddit_deals"],
+    "heat": 84, "score": 412,      // reddit upvotes when known
+    "first_seen": "…", "last_seen": "…", "seen_count": 3,
+    "price_history": [["2026-11-24T10:07:00Z", 549.99], ["…", 499.99]]
+} ] }
+
+// data/meta.json  : totals, by_category, by_store, categories, stores, per-source reports, research report
+// data/runs.json  : last 168 run summaries (newest first) shown on the changelog page</code></pre>
+
+    <h2 id="local">running locally<a class="anchor" href="#local">#</a></h2>
+<pre><code>git clone https://github.com/ihemu45/claude-advisor-skill.git &amp;&amp; cd claude-advisor-skill
+pip install -r agent/requirements.txt
+python -m unittest discover -s agent/tests -t .          # 55 offline tests
+python -m agent --sample --out site/data                 # fixtures, no network
+ANTHROPIC_API_KEY=sk-… python -m agent --out site/data  # real run (add --no-research to skip Claude)
+python -m http.server -d site 8000                       # open http://localhost:8000/</code></pre>
+    <p>The pages fetch <code>data/*.json</code> relative to the site root, so they must be served over HTTP rather than opened as files.</p>
+
+    <h2 id="faq">faq &amp; limits<a class="anchor" href="#faq">#</a></h2>
+    <h3>Why not scrape Amazon, Target and Walmart directly?</h3>
+    <p>Their terms of service forbid it and they block automated clients aggressively, so a scraper would be both unreliable and against the rules. dealgrep instead uses community deal feeds (which link to those stores), the official Best Buy API, and Claude's web search, which reads public pages the way a person would. Amazon's Product Advertising API and Walmart's affiliate API are good future sources for anyone with an approved affiliate account.</p>
+    <h3>Why is a run late or missing?</h3>
+    <p>GitHub schedules workflows best-effort; runs can start several minutes late during busy periods. The cron fires at :07 to avoid the top-of-hour rush. GitHub also disables scheduled workflows on public repositories after 60 days without any commit; a push re-enables them.</p>
+    <h3>Why do some deals have no price?</h3>
+    <p>Not every feed item states a price in its title or body. Those show “price on site” and get a lower heat score. Best Buy API and Claude research items always carry a price.</p>
+    <h3>Is the data accurate?</h3>
+    <p>It is as accurate as the source at the time it was read, which may be up to an hour ago. Treat the site as a radar, not a receipt: confirm the price on the store page.</p>
+  </article>
+</div></main>
+
+<footer><div class="wrap">
+  <span>dealgrep · refreshed hourly by an automated agent · prices and availability change fast, verify at the store</span>
+  <span><a href="https://github.com/ihemu45/claude-advisor-skill">source on github</a> · <a href="../about/">about &amp; contact</a></span>
+</div></footer>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+name: refresh deals and deploy
+
+on:
+  schedule:
+    - cron: "7 * * * *"          # hourly at :07 UTC; off the hour so GitHub's top-of-hour queue does not delay it
+  workflow_dispatch:
+    inputs:
+      research:
+        description: "Run the Claude research step (needs the ANTHROPIC_API_KEY secret)"
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "agent/**"
+      - ".github/workflows/refresh-deals.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: refresh-deals
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: fetch feeds, research, build data
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: agent/requirements.txt
+
+      - name: Install agent dependencies
+        run: pip install -r agent/requirements.txt
+
+      - name: Run offline tests
+        run: python -m unittest discover -s agent/tests -t .
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Run the research agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BESTBUY_API_KEY: ${{ secrets.BESTBUY_API_KEY }}
+          PREVIOUS_DATA_URL: ${{ steps.pages.outputs.base_url }}/data
+          RESEARCH_MODEL: ${{ vars.RESEARCH_MODEL }}
+          RESEARCH_EFFORT: ${{ vars.RESEARCH_EFFORT }}
+          RESEARCH_PER_RUN: ${{ vars.RESEARCH_PER_RUN }}
+          RESEARCH_HOT: ${{ vars.RESEARCH_HOT }}
+          RESEARCH_MAX_SEARCHES: ${{ vars.RESEARCH_MAX_SEARCHES }}
+          STALE_HOURS: ${{ vars.STALE_HOURS }}
+          MAX_DEALS: ${{ vars.MAX_DEALS }}
+          SKIP_RESEARCH: ${{ github.event_name == 'workflow_dispatch' && inputs.research == false }}
+        run: |
+          set -euo pipefail
+          extra=""
+          if [ "$SKIP_RESEARCH" = "true" ]; then extra="--no-research"; fi
+          python -m agent --out site/data $extra
+          echo "### dealgrep run" >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          m = json.load(open("site/data/meta.json"))
+          r = m.get("research") or {}
+          print(f"- **{m['total']}** deals, **{m['new_this_run']}** new, {m['with_coupon']} with coupon, {m['black_friday']} tagged Black Friday")
+          print(f"- sources ok: {sum(1 for s in m['sources'] if s['ok'])}/{sum(1 for s in m['sources'] if not s.get('skipped'))}")
+          for s in m["sources"]:
+              state = "ok" if s["ok"] else ("skipped: " + s["skipped"] if s.get("skipped") else "FAILED")
+              print(f"  - {s['name']}: {state} ({s['count']} items) {s.get('error') or ''}")
+          if r.get("enabled"):
+              print(f"- research: {r.get('found')} deals from {', '.join(r.get('categories', []))} via {r.get('model')} — {r.get('input_tokens')} in / {r.get('output_tokens')} out tokens, {r.get('web_searches')} web searches")
+              for e in r.get("errors", []):
+                  print(f"  - error: {e}")
+          else:
+              print(f"- research: skipped ({r.get('skipped')})")
+          PY
+
+      - name: Upload site as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: deploy to GitHub Pages
+    needs: refresh
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

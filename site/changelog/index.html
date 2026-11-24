@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changelog · dealgrep</title>
+<meta name="description" content="Release notes for dealgrep and the log of recent hourly agent runs: deals found, sources that answered, research categories and errors.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{if(localStorage.getItem('dealgrep.theme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}</script>
+</head>
+<body data-page="changelog">
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="../"><span class="prompt">~/dealgrep $</span><span class="cursor" aria-hidden="true"></span></a>
+  <nav class="nav" aria-label="Primary">
+    <a href="../" data-nav="home">home</a>
+    <a href="../deals.html" data-nav="deals">deals</a>
+    <a href="../stores.html" data-nav="stores">stores</a>
+    <a href="../docs/" data-nav="docs">docs</a>
+    <a href="../changelog/" data-nav="changelog">changelog</a>
+    <a href="../about/" data-nav="about">about</a>
+  </nav>
+  <button class="iconbtn" data-theme-toggle type="button"><span class="t">theme: </span><span class="v">dark</span></button>
+</div></header>
+<div class="banner" data-sample-banner hidden><div class="wrap"><span class="tagline">sample data</span><span>The hourly agent has not run yet. The run log below shows the sample generation only.</span></div></div>
+<div class="statusline"><div class="wrap" data-statusline><span>loading status…</span></div></div>
+
+<main>
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>release notes</h2><a class="more" href="https://github.com/ihemu45/claude-advisor-skill/commits/main">commit history →</a></div>
+    <div class="release">
+      <span class="ver">v0.1.0</span><span class="date">2026-11-24</span>
+      <h3>First release</h3>
+      <ul>
+        <li>Hourly GitHub Actions agent: Slickdeals RSS, deal subreddits, Best Buy API, optional Claude web research.</li>
+        <li>Store detection, canonical URLs, price / list price / coupon parsing, 18-category classifier, heat score, 48-hour expiry.</li>
+        <li>Static site: home, deals browser with category sidebar, item search and per-store price comparison, stores page, docs, changelog, about.</li>
+        <li>History carried forward from the live site: first-seen dates, seen counts and price history survive redeploys without committing data.</li>
+      </ul>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>agent run log</h2><span class="more muted">newest first · up to one week</span></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>run (local time)</th><th class="num">deals</th><th class="num">new</th><th class="num">sources</th><th>research</th><th class="num">ms</th><th>errors</th></tr></thead>
+      <tbody data-runs><tr><td colspan="7" class="muted">loading…</td></tr></tbody>
+    </table></div>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>dealgrep · refreshed hourly by an automated agent · prices and availability change fast, verify at the store</span>
+  <span><a href="https://github.com/ihemu45/claude-advisor-skill">source on github</a> · <a href="../about/">about &amp; contact</a></span>
+</div></footer>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

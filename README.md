@@ -1,4 +1,52 @@
-# Claude Advisor Skill
+# dealgrep + Claude Advisor Skill
+
+This repository holds two things:
+
+1. **[dealgrep](#dealgrep)** — a deals website (`site/`) refreshed every hour by a research agent (`agent/`) that runs in GitHub Actions and deploys to GitHub Pages.
+2. **[Claude Advisor Skill](#claude-advisor-skill)** — an Agent Skill that makes Claude act like a blunt advisor (`skills/advisor`).
+
+---
+
+## dealgrep
+
+**Hourly deal radar.** An automated agent pulls hot deals, discounts, coupon codes and Black Friday offers from public feeds (Slickdeals, deal subreddits, the Best Buy API) and, with an API key, asks Claude to research live deals at Amazon, Best Buy, Target, Walmart and more via web search. Everything is normalised into JSON that a static, terminal-styled site renders: browse by category, search an item, compare the lowest price per store, copy coupon codes.
+
+- Site: `https://ihemu45.github.io/claude-advisor-skill/` once GitHub Pages is enabled (see setup).
+- Pages: home, deals browser, stores, docs, changelog, about.
+- Agent: `python -m agent` (Python 3.12, `requests` + `anthropic`), 55 offline tests.
+- Workflow: `.github/workflows/refresh-deals.yml` runs hourly, on manual dispatch, and on pushes to `main`.
+
+### Setup (one time)
+
+1. Merge to `main`; scheduled workflows only run from the default branch.
+2. Settings → Pages → Build and deployment → Source: **GitHub Actions** (the workflow also tries to enable this itself).
+3. Settings → Secrets and variables → Actions → add `ANTHROPIC_API_KEY` (optional, enables Claude research) and `BESTBUY_API_KEY` (optional, enables the Best Buy API).
+4. Actions → *refresh deals and deploy* → **Run workflow** to replace the sample data. The cron takes over after that.
+
+Research cost is the one thing to watch: three Claude requests per hour on `claude-opus-5-5` is roughly $15–25/day. Tune with repository variables `RESEARCH_PER_RUN`, `RESEARCH_HOT`, `RESEARCH_MAX_SEARCHES`, `RESEARCH_MODEL`; leave the key unset to run feeds only for free. Full details in [`site/docs/`](site/docs/index.html).
+
+### Run locally
+
+```bash
+pip install -r agent/requirements.txt
+python -m unittest discover -s agent/tests -t .
+python -m agent --sample --out site/data      # offline fixtures, marks output as sample
+python -m http.server -d site 8000            # http://localhost:8000/
+```
+
+### Layout
+
+```
+agent/            hourly research agent (config, categorize, sources, research, pipeline, __main__)
+agent/sources.json feed registry: add any RSS/Atom/Reddit feed here
+agent/tests/      unittest suite + synthetic fixtures (also seed the sample data)
+site/             static site served by GitHub Pages; site/data/*.json is rewritten each run
+.github/workflows/refresh-deals.yml
+```
+
+---
+
+## Claude Advisor Skill
 
 **Claude agrees with your bad ideas too easily.** `advisor` is a free [Agent Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) that makes Claude act like a blunt advisor instead of an assistant. It works in Claude Code, claude.ai, and the Claude API.
 

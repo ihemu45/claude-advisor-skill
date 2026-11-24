@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Slickdeals Frontpage (sample fixture)</title>
+<link>https://slickdeals.net/</link>
+<description>Synthetic sample items used by dealgrep for offline tests and the first deploy. Not real deals.</description>
+<item>
+  <title>65&quot; 4K QLED Smart TV (2025 Model) $499.99 + Free Shipping</title>
+  <link>https://slickdeals.net/deals/tv/</link>
+  <description>&lt;p&gt;Amazon has the 65&quot; 4K QLED Smart TV for &lt;b&gt;$499.99&lt;/b&gt;. Was $799.99. Black Friday pricing, shipping is free. &lt;a href=&quot;https://www.amazon.com/s?k=65+inch+qled+tv&quot;&gt;Deal link&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 13:05:00 GMT</pubDate>
+</item>
+<item>
+  <title>Self-Emptying Robot Vacuum &amp; Mop Combo $279 (Reg. $599)</title>
+  <link>https://slickdeals.net/deals/vacuums/</link>
+  <description>&lt;p&gt;Best Buy has the self-emptying robot vacuum and mop combo for $279. Regularly $599. Deal of the day. &lt;a href=&quot;https://www.bestbuy.com/site/searchpage.jsp?st=robot+vacuum&quot;&gt;Link&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 12:40:00 GMT</pubDate>
+</item>
+<item>
+  <title>Wireless Noise-Cancelling Over-Ear Headphones $149.99 w/ code SAVE30</title>
+  <link>https://slickdeals.net/deals/headphones/</link>
+  <description>&lt;p&gt;Target has the wireless noise-cancelling headphones for $149.99 when you apply promo code SAVE30 at checkout. List $249.99. &lt;a href=&quot;https://www.target.com/s?searchTerm=noise+cancelling+headphones&quot;&gt;Target&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 12:10:00 GMT</pubDate>
+</item>
+<item>
+  <title>2TB NVMe PCIe 4.0 Internal SSD $89.99</title>
+  <link>https://slickdeals.net/deals/computers/</link>
+  <description>&lt;p&gt;Newegg has the 2TB NVMe Gen4 SSD for $89.99 (was $139.99) with free shipping. &lt;a href=&quot;https://www.newegg.com/p/pl?d=2tb+nvme+ssd&quot;&gt;Newegg&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 11:55:00 GMT</pubDate>
+</item>
+<item>
+  <title>7-Quart Dual-Basket Air Fryer $69 (was $139)</title>
+  <link>https://slickdeals.net/deals/kitchen/</link>
+  <description>&lt;p&gt;Walmart has the 7-qt dual basket air fryer for $69. Black Friday deal, in stock for pickup and shipping. &lt;a href=&quot;https://www.walmart.com/search?q=dual+basket+air+fryer&quot;&gt;Walmart&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 11:20:00 GMT</pubDate>
+</item>
+<item>
+  <title>20V Brushless Drill/Driver &amp; Impact Driver Combo Kit w/ 2 Batteries $129</title>
+  <link>https://slickdeals.net/deals/tools/</link>
+  <description>&lt;p&gt;Home Depot has the 20V brushless drill and impact driver combo kit for $129, regularly $249. Free shipping. &lt;a href=&quot;https://www.homedepot.com/s/drill%20combo%20kit&quot;&gt;Home Depot&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 10:45:00 GMT</pubDate>
+</item>
+<item>
+  <title>Smart Speaker with Display (3rd Gen) $34.99</title>
+  <link>https://slickdeals.net/deals/smart-home/</link>
+  <description>&lt;p&gt;Amazon has the smart speaker with display for $34.99 (list $89.99). Lightning deal. &lt;a href=&quot;https://www.amazon.com/s?k=smart+display+speaker&quot;&gt;Amazon&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 10:10:00 GMT</pubDate>
+</item>
+<item>
+  <title>Men's Waterproof Insulated Winter Jacket $59.98 (Reg. $150)</title>
+  <link>https://slickdeals.net/deals/clothing/</link>
+  <description>&lt;p&gt;Kohl's has the men's insulated winter jacket for $59.98 with code FRIDAY20. Regular $150. Free shipping on $49+. &lt;a href=&quot;https://www.kohls.com/search.jsp?search=mens+winter+jacket&quot;&gt;Kohl's&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 09:30:00 GMT</pubDate>
+</item>
+<item>
+  <title>Electric Toothbrush w/ 4 Brush Heads &amp; Travel Case $39.99</title>
+  <link>https://slickdeals.net/deals/personal-care/</link>
+  <description>&lt;p&gt;Amazon has the rechargeable electric toothbrush bundle for $39.99 after clipping the 20% off coupon on the product page. Was $79.99. &lt;a href=&quot;https://www.amazon.com/s?k=electric+toothbrush&quot;&gt;Amazon&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 09:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>1,000-Piece Building Block Set $64.99 (was $99.99)</title>
+  <link>https://slickdeals.net/deals/toys/</link>
+  <description>&lt;p&gt;Target has the 1,000-piece building block set for $64.99. Toy deals week. &lt;a href=&quot;https://www.target.com/s?searchTerm=building+block+set&quot;&gt;Target&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 08:20:00 GMT</pubDate>
+</item>
+<item>
+  <title>45-Quart Hard Cooler $199 + $40 Gift Card</title>
+  <link>https://slickdeals.net/deals/outdoors/</link>
+  <description>&lt;p&gt;Target has the 45-quart hard cooler for $199 with a $40 Target gift card. Regularly $299. &lt;a href=&quot;https://www.target.com/s?searchTerm=45+quart+cooler&quot;&gt;Target&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 07:50:00 GMT</pubDate>
+</item>
+<item>
+  <title>Dash Cam Front &amp; Rear 4K w/ 128GB Card $79.99</title>
+  <link>https://slickdeals.net/deals/automotive/</link>
+  <description>&lt;p&gt;Amazon has the 4K front and rear dash cam with a 128GB card for $79.99 w/ code DASH40. Was $139.99. &lt;a href=&quot;https://www.amazon.com/s?k=4k+dash+cam&quot;&gt;Amazon&lt;/a&gt;&lt;/p&gt;</description>
+  <pubDate>Mon, 24 Nov 2026 07:15:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "slickdeals_frontpage",
+    "name": "Slickdeals Frontpage",
+    "type": "rss",
+    "url": "https://slickdeals.net/newsearch.php?mode=frontpage&searcharea=deals&searchin=first&rss=1",
+    "homepage": "https://slickdeals.net/",
+    "weight": 25,
+    "sample": "slickdeals_frontpage.xml"
+  },
+  {
+    "id": "slickdeals_popular",
+    "name": "Slickdeals Popular",
+    "type": "rss",
+    "url": "https://slickdeals.net/newsearch.php?mode=popdeals&searcharea=deals&searchin=first&rss=1",
+    "homepage": "https://slickdeals.net/",
+    "weight": 15,
+    "sample": "slickdeals_popular.xml"
+  },
+  {
+    "id": "reddit_deals",
+    "name": "r/deals",
+    "type": "reddit",
+    "url": "https://www.reddit.com/r/deals/hot.json?limit=100&raw_json=1",
+    "fallback_url": "https://www.reddit.com/r/deals/hot.rss?limit=100",
+    "homepage": "https://www.reddit.com/r/deals/",
+    "weight": 10,
+    "sample": "reddit_deals.json"
+  },
+  {
+    "id": "reddit_blackfriday",
+    "name": "r/blackfriday",
+    "type": "reddit",
+    "url": "https://www.reddit.com/r/blackfriday/hot.json?limit=100&raw_json=1",
+    "fallback_url": "https://www.reddit.com/r/blackfriday/hot.rss?limit=100",
+    "homepage": "https://www.reddit.com/r/blackfriday/",
+    "weight": 10
+  },
+  {
+    "id": "reddit_buildapcsales",
+    "name": "r/buildapcsales",
+    "type": "reddit",
+    "url": "https://www.reddit.com/r/buildapcsales/hot.json?limit=100&raw_json=1",
+    "fallback_url": "https://www.reddit.com/r/buildapcsales/hot.rss?limit=100",
+    "homepage": "https://www.reddit.com/r/buildapcsales/",
+    "weight": 10,
+    "category_hint": "computers",
+    "sample": "reddit_buildapcsales.json"
+  },
+  {
+    "id": "reddit_gamedeals",
+    "name": "r/GameDeals",
+    "type": "reddit",
+    "url": "https://www.reddit.com/r/GameDeals/hot.json?limit=100&raw_json=1",
+    "fallback_url": "https://www.reddit.com/r/GameDeals/hot.rss?limit=100",
+    "homepage": "https://www.reddit.com/r/GameDeals/",
+    "weight": 8,
+    "category_hint": "gaming",
+    "sample": "reddit_gamedeals.json"
+  },
+  {
+    "id": "reddit_consoledeals",
+    "name": "r/consoledeals",
+    "type": "reddit",
+    "url": "https://www.reddit.com/r/consoledeals/hot.json?limit=100&raw_json=1",
+    "fallback_url": "https://www.reddit.com/r/consoledeals/hot.rss?limit=100",
+    "homepage": "https://www.reddit.com/r/consoledeals/",
+    "weight": 8,
+    "category_hint": "gaming"
+  },
+  {
+    "id": "reddit_frugalmalefashion",
+    "name": "r/frugalmalefashion",
+    "type": "reddit",
+    "url": "https://www.reddit.com/r/frugalmalefashion/hot.json?limit=100&raw_json=1",
+    "fallback_url": "https://www.reddit.com/r/frugalmalefashion/hot.rss?limit=100",
+    "homepage": "https://www.reddit.com/r/frugalmalefashion/",
+    "weight": 6,
+    "category_hint": "fashion"
+  },
+  {
+    "id": "reddit_frugalfemalefashion",
+    "name": "r/frugalfemalefashion",
+    "type": "reddit",
+    "url": "https://www.reddit.com/r/frugalfemalefashion/hot.json?limit=100&raw_json=1",
+    "fallback_url": "https://www.reddit.com/r/frugalfemalefashion/hot.rss?limit=100",
+    "homepage": "https://www.reddit.com/r/frugalfemalefashion/",
+    "weight": 6,
+    "category_hint": "fashion"
+  },
+  {
+    "id": "bestbuy_api",
+    "name": "Best Buy API",
+    "type": "bestbuy",
+    "url": "https://api.bestbuy.com/v1/products(onSale=true&percentSavings>15&customerReviewCount>10)?apiKey={BESTBUY_API_KEY}&format=json&show=sku,name,salePrice,regularPrice,percentSavings,url,categoryPath.name,customerReviewAverage&sort=percentSavings.dsc&pageSize=100",
+    "homepage": "https://www.bestbuy.com/",
+    "requires_env": "BESTBUY_API_KEY",
+    "weight": 12,
+    "store_hint": "bestbuy",
+    "sample": "bestbuy.json"
+  }
+]
