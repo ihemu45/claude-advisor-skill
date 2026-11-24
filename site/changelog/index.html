@@ -38,7 +38,7 @@
         <li>Hourly GitHub Actions agent: Slickdeals RSS, deal subreddits, Best Buy API, optional Claude web research.</li>
         <li>Store detection, canonical URLs, price / list price / coupon parsing, 18-category classifier, heat score, 48-hour expiry.</li>
         <li>Static site: home, deals browser with category sidebar, item search and per-store price comparison, stores page, docs, changelog, about.</li>
-        <li>History carried forward from the live site: first-seen dates, seen counts and price history survive redeploys without committing data.</li>
+        <li>Hourly data commits to the repository trigger a Vercel redeploy; first-seen dates, seen counts and price history carry forward from the previous commit.</li>
       </ul>
     </div>
   </div></section>

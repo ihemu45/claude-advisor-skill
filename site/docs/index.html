@@ -47,7 +47,7 @@
 
   <article class="prose">
     <h1>docs</h1>
-    <p class="lead">dealgrep is two things: a Python agent that runs hourly in GitHub Actions and writes JSON, and a static site on GitHub Pages that renders it. There is no server, database or build step.</p>
+    <p class="lead">dealgrep is two things: a Python agent that runs hourly in GitHub Actions and commits JSON, and a static site hosted on Vercel that renders it. There is no server, database or build step.</p>
 
     <h2 id="overview">overview<a class="anchor" href="#overview">#</a></h2>
     <ul>
@@ -55,23 +55,23 @@
       <li><strong>Research</strong>: optionally, Claude searches the web for live deals in a rotating set of categories and returns structured JSON.</li>
       <li><strong>Normalise</strong>: each item gets a store, category, price, list price, discount, coupon code and tags; duplicates across sources are merged by canonical URL.</li>
       <li><strong>Score</strong>: a 0 to 100 heat score ranks deals; deals unseen for 48 hours are dropped.</li>
-      <li><strong>Publish</strong>: <code>deals.json</code>, <code>meta.json</code> and <code>runs.json</code> are written and the site is redeployed.</li>
+      <li><strong>Publish</strong>: <code>deals.json</code>, <code>meta.json</code> and <code>runs.json</code> are committed to the repository; Vercel is linked to it and redeploys the site on that push.</li>
     </ul>
 
     <h2 id="how-it-works">how it works<a class="anchor" href="#how-it-works">#</a></h2>
 <pre><code>  cron "7 * * * *" ──▶ GitHub Actions: refresh-deals.yml
                            │
                            ├─ python -m agent --out site/data
-                           │     ├─ load previous deals.json from the live site  (history)
+                           │     ├─ previous site/data/deals.json from the repo  (history)
                            │     ├─ sources.py   : RSS / Reddit / Best Buy  ─┐
                            │     ├─ research.py  : Claude + web_search       ─┼─▶ raw items
                            │     ├─ categorize.py: store, price, coupon, tags ◀┘
                            │     └─ pipeline.py  : merge, dedupe, heat, write JSON
                            │
-                           └─ upload site/ as the Pages artifact ──▶ deploy-pages
-                                                                          │
+                           └─ git commit site/data && git push ──▶ Vercel sees the push
+                                                                        │ and redeploys site/
    browser ◀── index.html, deals.html … + assets/site.js ◀── fetch data/*.json</code></pre>
-    <p>History lives in the deployed site itself: each run first downloads the previous <code>deals.json</code> from the live Pages URL, so first-seen dates, seen counts and price history carry forward without committing data to git. If the live file is missing (first run) the agent starts fresh.</p>
+    <p>History lives in git: each run starts from the <code>site/data/deals.json</code> committed by the previous hour, so first-seen dates, seen counts and price history carry forward. Vercel is connected to the repository with <code>site</code> as its root directory, so every data commit becomes a new production deployment within about a minute. Nothing else is deployed by the workflow.</p>
 
     <h2 id="using-the-site">using the site<a class="anchor" href="#using-the-site">#</a></h2>
     <ul>
@@ -83,19 +83,19 @@
     </ul>
 
     <h2 id="setup">setup<a class="anchor" href="#setup">#</a></h2>
-    <p>Everything is in the repository. To run your own copy or to turn on the hourly job for this one:</p>
+    <p>Everything is in the repository. Hosting is Vercel; scheduling is GitHub Actions. To turn it on for this repository or your own copy:</p>
     <ol>
-      <li><strong>Merge to <code>main</code></strong>. Scheduled workflows only run from the default branch.</li>
-      <li><strong>Enable GitHub Pages with the “GitHub Actions” source.</strong> Repository → Settings → Pages → Build and deployment → Source → <em>GitHub Actions</em>. The workflow also tries to enable this itself on its first run.</li>
-      <li><strong>Add secrets</strong> (Settings → Secrets and variables → Actions → Secrets):
+      <li><strong>Merge to <code>main</code></strong>. Scheduled workflows only run from the default branch, and Vercel deploys production from it.</li>
+      <li><strong>Connect Vercel to the repository</strong>: on vercel.com choose <em>Add New → Project</em>, import <code>ihemu45/claude-advisor-skill</code>, set <strong>Root Directory</strong> to <code>site</code>, leave the framework as <em>Other</em> with no build command, and deploy. Vercel gives the project a <code>*.vercel.app</code> URL and redeploys on every push to <code>main</code>.</li>
+      <li><strong>Add secrets on GitHub</strong> (Settings → Secrets and variables → Actions → Secrets):
         <ul>
           <li><code>ANTHROPIC_API_KEY</code>: turns on the Claude research step. Without it the site still works from the public feeds alone.</li>
           <li><code>BESTBUY_API_KEY</code> (optional): enables the official Best Buy products API. Free keys are issued at developer.bestbuy.com.</li>
         </ul>
       </li>
-      <li><strong>Run it once by hand</strong>: Actions → <em>refresh deals and deploy</em> → Run workflow. The first run replaces the sample data; after that the cron takes over every hour.</li>
+      <li><strong>Run it once by hand</strong>: Actions → <em>refresh deals</em> → Run workflow. It commits real data over the sample data and Vercel redeploys; after that the cron takes over every hour.</li>
     </ol>
-    <div class="callout info">The site URL for a project repository is <code>https://&lt;user&gt;.github.io/&lt;repo&gt;/</code>. GitHub Pages on a <em>private</em> repository needs a paid plan; public repositories are free.</div>
+    <div class="callout info">The agent commits about one small JSON change per hour to <code>main</code>. That is the whole deployment mechanism, so leave Vercel's default "deploy every push" behaviour on and do not add <code>[skip ci]</code> to anything that touches <code>site/data</code>.</div>
 
     <h2 id="configuration">configuration<a class="anchor" href="#configuration">#</a></h2>
     <p>Tunables are read from environment variables. In GitHub Actions set them as repository <em>variables</em> (Settings → Secrets and variables → Actions → Variables); the workflow forwards them. Empty values fall back to the defaults.</p>
@@ -156,7 +156,7 @@
     </ul>
 
     <h2 id="data">data files<a class="anchor" href="#data">#</a></h2>
-    <p>Everything the site shows is in three JSON files under <code>data/</code>, which you are free to consume directly.</p>
+    <p>Everything the site shows is in three JSON files under <code>data/</code> (in the repository under <code>site/data/</code>), which you are free to consume directly.</p>
 <pre><code>// data/deals.json
 { "generated_at": "2026-11-24T16:07:00Z", "sample": false, "deals": [ {
     "id": "3f9c…",                 // sha1 of the canonical URL
